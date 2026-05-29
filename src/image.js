@@ -358,24 +358,16 @@ export default class Image {
     return {};
   }
 
-  static getSharpResizeOptionsWithoutDimensions(sharpResizeOptions = {}) {
-    let options = {
-      ...sharpResizeOptions,
+  getSharpResizeOptions(stat, metadata) {
+    let resizeOptions = {
+      ...this.options.sharpResizeOptions,
     };
 
     // Eleventy Image owns output dimensions. Allowing these here would make
     // returned metadata disagree with the output image.
-    delete options.width;
-    delete options.height;
-
-    return options;
-  }
-
-  getSharpResizeOptions(stat, metadata) {
-    let resizeOptions = {
-      ...Image.getSharpResizeOptionsWithoutDimensions(this.options.sharpResizeOptions),
-      width: stat.width,
-    };
+    delete resizeOptions.width;
+    delete resizeOptions.height;
+    resizeOptions.width = stat.width;
 
     if(!("withoutEnlargement" in resizeOptions) && (metadata.format !== "svg" || !this.options.svgAllowUpscale)) {
       resizeOptions.withoutEnlargement = true;

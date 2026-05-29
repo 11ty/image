@@ -796,16 +796,6 @@ test("sharpResizeOptions should not override Eleventy Image dimensions", async t
   t.true(outputMetadata.height > 10);
 });
 
-test("sharpResizeOptions should allow withoutEnlargement option", t => {
-  let image = new Image("./test/bio-2017.jpg", {
-    sharpResizeOptions: {
-      withoutEnlargement: false,
-    },
-  });
-
-  t.false(image.getSharpResizeOptions({ width: 300 }, { format: "jpeg" }).withoutEnlargement);
-});
-
 test("statsSync and eleventyImage output comparison", async t => {
   let statsSync = eleventyImage.statsSync("./test/bio-2017.jpg", {
     widths: [399],

@@ -358,28 +358,26 @@ export default class Image {
     return {};
   }
 
-  static getNonDimensionSharpResizeOptions(sharpResizeOptions = {}) {
+  static getSharpResizeOptionsWithoutDimensions(sharpResizeOptions = {}) {
     let options = {
       ...sharpResizeOptions,
     };
 
-    // Eleventy Image owns output dimensions and up/downscale policy. Allowing
-    // these here would make returned metadata disagree with the output image.
+    // Eleventy Image owns output dimensions. Allowing these here would make
+    // returned metadata disagree with the output image.
     delete options.width;
     delete options.height;
-    delete options.withoutEnlargement;
-    delete options.withoutReduction;
 
     return options;
   }
 
   getSharpResizeOptions(stat, metadata) {
     let resizeOptions = {
-      ...Image.getNonDimensionSharpResizeOptions(this.options.sharpResizeOptions),
+      ...Image.getSharpResizeOptionsWithoutDimensions(this.options.sharpResizeOptions),
       width: stat.width,
     };
 
-    if(metadata.format !== "svg" || !this.options.svgAllowUpscale) {
+    if(!("withoutEnlargement" in resizeOptions) && (metadata.format !== "svg" || !this.options.svgAllowUpscale)) {
       resizeOptions.withoutEnlargement = true;
     }
 

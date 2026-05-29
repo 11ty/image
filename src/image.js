@@ -362,6 +362,18 @@ export default class Image {
     return {};
   }
 
+  getSharpResizeOptions(stat, metadata) {
+    let resizeOptions = Object.assign({}, this.options.sharpResizeOptions, {
+      width: stat.width,
+    });
+
+    if(metadata.format !== "svg" || !this.options.svgAllowUpscale) {
+      resizeOptions.withoutEnlargement = true;
+    }
+
+    return resizeOptions;
+  }
+
   get rawInput() {
     // internal cache
     if(!this.#input) {
@@ -425,12 +437,17 @@ export default class Image {
       "sharpPngOptions",
       "sharpJpegOptions",
       "sharpAvifOptions",
+      "sharpResizeOptions",
       "manualCacheKey"
     ].sort();
 
     let hashObject = {};
     for(let key of keysToKeep) {
       if(this.options[key] === undefined) {
+        continue;
+      }
+
+      if(key === "sharpResizeOptions" && Object.keys(this.options[key]).length === 0) {
         continue;
       }
 
@@ -789,15 +806,7 @@ export default class Image {
 
         if(!isTransformResize) {
           if(stat.width < sharpMetadata.width || (this.options.svgAllowUpscale && sharpMetadata.format === "svg")) {
-            let resizeOptions = {
-              width: stat.width
-            };
-
-            if(sharpMetadata.format !== "svg" || !this.options.svgAllowUpscale) {
-              resizeOptions.withoutEnlargement = true;
-            }
-
-            sharpInstance.resize(resizeOptions);
+            sharpInstance.resize(this.getSharpResizeOptions(stat, sharpMetadata));
           }
         }
 

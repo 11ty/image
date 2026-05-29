@@ -465,11 +465,8 @@ export default class Image {
         continue;
       }
 
-      if(key === "sharpResizeOptions") {
-        options = Image.getNonDimensionSharpResizeOptions(options);
-        if(Object.keys(options).length === 0) {
-          continue;
-        }
+      if(key === "sharpResizeOptions" && Object.keys(options).length === 0) {
+        continue;
       }
 
       // Object literals are sorted for stable hashes (see Util.getSortedObject);

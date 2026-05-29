@@ -730,7 +730,7 @@ test("empty sharpResizeOptions should be ignored in hashing", t => {
   t.is(stats.jpeg[0].url, "/img/KkPMmHd3hP-1280.jpeg");
 });
 
-test("dimension sharpResizeOptions should be ignored in hashing", t => {
+test("dimension sharpResizeOptions should be included in hashing", t => {
   let stats = eleventyImage.statsSync("./test/bio-2017.jpg", {
     widths: [1280],
     sharpResizeOptions: {
@@ -741,7 +741,7 @@ test("dimension sharpResizeOptions should be ignored in hashing", t => {
     }
   });
 
-  t.is(stats.jpeg[0].url, "/img/KkPMmHd3hP-1280.jpeg");
+  t.not(stats.jpeg[0].url, "/img/KkPMmHd3hP-1280.jpeg");
 });
 
 test("sharpResizeOptions should apply to resize output and hash", async t => {

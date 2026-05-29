@@ -452,11 +452,8 @@ export default class Image {
     for(let key of keysToKeep) {
       let options = this.options[key];
 
-      if(key === "sharpResizeOptions") {
-        options = Image.getNonDimensionSharpResizeOptions(options);
-        if(Object.keys(options).length === 0) {
-          continue;
-        }
+      if(key === "sharpResizeOptions" && Object.keys(options).length === 0) {
+        continue;
       }
 
       if(options) {

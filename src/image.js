@@ -362,9 +362,24 @@ export default class Image {
     return {};
   }
 
+  static getNonDimensionSharpResizeOptions(sharpResizeOptions = {}) {
+    let options = {
+      ...sharpResizeOptions,
+    };
+
+    // Eleventy Image owns output dimensions and up/downscale policy. Allowing
+    // these here would make returned metadata disagree with the output image.
+    delete options.width;
+    delete options.height;
+    delete options.withoutEnlargement;
+    delete options.withoutReduction;
+
+    return options;
+  }
+
   getSharpResizeOptions(stat, metadata) {
     let resizeOptions = {
-      ...this.options.sharpResizeOptions,
+      ...Image.getNonDimensionSharpResizeOptions(this.options.sharpResizeOptions),
       width: stat.width,
     };
 
@@ -444,20 +459,25 @@ export default class Image {
 
     let hashObject = {};
     for(let key of keysToKeep) {
-      if(this.options[key] === undefined) {
+      let options = this.options[key];
+
+      if(options === undefined) {
         continue;
       }
 
-      if(key === "sharpResizeOptions" && Object.keys(this.options[key]).length === 0) {
-        continue;
+      if(key === "sharpResizeOptions") {
+        options = Image.getNonDimensionSharpResizeOptions(options);
+        if(Object.keys(options).length === 0) {
+          continue;
+        }
       }
 
       // Object literals are sorted for stable hashes (see Util.getSortedObject);
       // primitives (e.g. a `manualCacheKey` number or string) are passed through as-is.
-      if(isPlainObject(this.options[key])) {
-        hashObject[key] = Util.getSortedObject(this.options[key]);
+      if(isPlainObject(options)) {
+        hashObject[key] = Util.getSortedObject(options);
       } else {
-        hashObject[key] = this.options[key];
+        hashObject[key] = options;
       }
     }
 

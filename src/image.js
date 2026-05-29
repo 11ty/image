@@ -359,9 +359,10 @@ export default class Image {
   }
 
   getSharpResizeOptions(stat, metadata) {
-    let resizeOptions = Object.assign({}, this.options.sharpResizeOptions, {
+    let resizeOptions = {
+      ...this.options.sharpResizeOptions,
       width: stat.width,
-    });
+    };
 
     if(metadata.format !== "svg" || !this.options.svgAllowUpscale) {
       resizeOptions.withoutEnlargement = true;

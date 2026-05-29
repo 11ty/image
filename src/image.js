@@ -358,6 +358,18 @@ export default class Image {
     return {};
   }
 
+  getSharpResizeOptions(stat, metadata) {
+    let resizeOptions = Object.assign({}, this.options.sharpResizeOptions, {
+      width: stat.width,
+    });
+
+    if(metadata.format !== "svg" || !this.options.svgAllowUpscale) {
+      resizeOptions.withoutEnlargement = true;
+    }
+
+    return resizeOptions;
+  }
+
   async getInput() {
     // internal cache
     if(!this.#input) {
@@ -415,12 +427,17 @@ export default class Image {
       "sharpWebpOptions",
       "sharpPngOptions",
       "sharpJpegOptions",
-      "sharpAvifOptions"
+      "sharpAvifOptions",
+      "sharpResizeOptions",
     ].sort();
 
     let hashObject = {};
     // The code currently assumes are keysToKeep are Object literals (see Util.getSortedObject)
     for(let key of keysToKeep) {
+      if(key === "sharpResizeOptions" && (!this.options[key] || Object.keys(this.options[key]).length === 0)) {
+        continue;
+      }
+
       if(this.options[key]) {
         hashObject[key] = Util.getSortedObject(this.options[key]);
       }
@@ -710,15 +727,7 @@ export default class Image {
 
         if(!isTransformResize) {
           if(stat.width < sharpMetadata.width || (this.options.svgAllowUpscale && sharpMetadata.format === "svg")) {
-            let resizeOptions = {
-              width: stat.width
-            };
-
-            if(sharpMetadata.format !== "svg" || !this.options.svgAllowUpscale) {
-              resizeOptions.withoutEnlargement = true;
-            }
-
-            sharpInstance.resize(resizeOptions);
+            sharpInstance.resize(this.getSharpResizeOptions(stat, sharpMetadata));
           }
         }
 
@@ -927,4 +936,3 @@ export default class Image {
     return img.statsByDimensionsSync(width, height);
   }
 }
-

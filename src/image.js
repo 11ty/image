@@ -358,6 +358,24 @@ export default class Image {
     return {};
   }
 
+  getSharpResizeOptions(stat, metadata) {
+    let resizeOptions = {
+      ...this.options.sharpResizeOptions,
+    };
+
+    // Eleventy Image owns output dimensions. Allowing these here would make
+    // returned metadata disagree with the output image.
+    delete resizeOptions.width;
+    delete resizeOptions.height;
+    resizeOptions.width = stat.width;
+
+    if(!("withoutEnlargement" in resizeOptions) && (metadata.format !== "svg" || !this.options.svgAllowUpscale)) {
+      resizeOptions.withoutEnlargement = true;
+    }
+
+    return resizeOptions;
+  }
+
   async getInput() {
     // internal cache
     if(!this.#input) {
@@ -415,14 +433,21 @@ export default class Image {
       "sharpWebpOptions",
       "sharpPngOptions",
       "sharpJpegOptions",
-      "sharpAvifOptions"
+      "sharpAvifOptions",
+      "sharpResizeOptions",
     ].sort();
 
     let hashObject = {};
     // The code currently assumes are keysToKeep are Object literals (see Util.getSortedObject)
     for(let key of keysToKeep) {
-      if(this.options[key]) {
-        hashObject[key] = Util.getSortedObject(this.options[key]);
+      let options = this.options[key];
+
+      if(key === "sharpResizeOptions" && Object.keys(options).length === 0) {
+        continue;
+      }
+
+      if(options) {
+        hashObject[key] = Util.getSortedObject(options);
       }
     }
 
@@ -710,15 +735,7 @@ export default class Image {
 
         if(!isTransformResize) {
           if(stat.width < sharpMetadata.width || (this.options.svgAllowUpscale && sharpMetadata.format === "svg")) {
-            let resizeOptions = {
-              width: stat.width
-            };
-
-            if(sharpMetadata.format !== "svg" || !this.options.svgAllowUpscale) {
-              resizeOptions.withoutEnlargement = true;
-            }
-
-            sharpInstance.resize(resizeOptions);
+            sharpInstance.resize(this.getSharpResizeOptions(stat, sharpMetadata));
           }
         }
 
@@ -927,4 +944,3 @@ export default class Image {
     return img.statsByDimensionsSync(width, height);
   }
 }
-

@@ -721,6 +721,81 @@ test("widths array should be ignored in hashing", t => {
   t.is(stats2.jpeg[1].url, "/img/KkPMmHd3hP-600.jpeg");
 });
 
+test("empty sharpResizeOptions should be ignored in hashing", t => {
+  let stats = eleventyImage.statsSync("./test/bio-2017.jpg", {
+    widths: [1280],
+    sharpResizeOptions: {}
+  });
+
+  t.is(stats.jpeg[0].url, "/img/KkPMmHd3hP-1280.jpeg");
+});
+
+test("dimension sharpResizeOptions should be included in hashing", t => {
+  let stats = eleventyImage.statsSync("./test/bio-2017.jpg", {
+    widths: [1280],
+    sharpResizeOptions: {
+      width: 10,
+      height: 10,
+      withoutEnlargement: true,
+      withoutReduction: true,
+    }
+  });
+
+  t.not(stats.jpeg[0].url, "/img/KkPMmHd3hP-1280.jpeg");
+});
+
+test("sharpResizeOptions should apply to resize output and hash", async t => {
+  let defaultStats = await eleventyImage("./test/bio-2017.jpg", {
+    widths: [64],
+    formats: ["jpeg"],
+    outputDir: "./test/img/",
+    dryRun: true,
+    useCache: false,
+  });
+
+  let stats = await eleventyImage("./test/bio-2017.jpg", {
+    widths: [64],
+    formats: ["jpeg"],
+    outputDir: "./test/img/",
+    dryRun: true,
+    useCache: false,
+    sharpResizeOptions: {
+      kernel: "nearest",
+    },
+  });
+
+  t.is(stats.jpeg[0].width, 64);
+  t.is(stats.jpeg[0].height, 42);
+  t.not(stats.jpeg[0].outputPath, path.join("test/img/KkPMmHd3hP-64.jpeg"));
+
+  let defaultRaw = await sharp(defaultStats.jpeg[0].buffer).ensureAlpha().toFormat(sharp.format.raw).toBuffer();
+  let nearestRaw = await sharp(stats.jpeg[0].buffer).ensureAlpha().toFormat(sharp.format.raw).toBuffer();
+
+  t.true(pixelmatch(defaultRaw, nearestRaw, null, stats.jpeg[0].width, stats.jpeg[0].height, { threshold: 0.15 }) > 0);
+});
+
+test("sharpResizeOptions should not override Eleventy Image dimensions", async t => {
+  let stats = await eleventyImage("./test/bio-2017.jpg", {
+    widths: [300],
+    formats: ["jpeg"],
+    outputDir: "./test/img/",
+    dryRun: true,
+    useCache: false,
+    sharpResizeOptions: {
+      width: 10,
+      height: 10,
+      kernel: "nearest",
+    },
+  });
+
+  let outputMetadata = await sharp(stats.jpeg[0].buffer).metadata();
+
+  t.is(stats.jpeg[0].width, 300);
+  t.is(stats.jpeg[0].height, 199);
+  t.is(outputMetadata.width, 300);
+  t.true(outputMetadata.height > 10);
+});
+
 test("statsSync and eleventyImage output comparison", async t => {
   let statsSync = eleventyImage.statsSync("./test/bio-2017.jpg", {
     widths: [399],

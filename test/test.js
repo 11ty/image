@@ -707,6 +707,23 @@ test("Sorted object keys", async t => {
   });
 });
 
+test("normalizeImageSource decodes HTML entities in an HTML `src` #307", t => {
+  // A file named `rose&rose.jpg` is written into HTML as `rose&amp;rose.jpg`.
+  // When reading it back out of the built HTML we must decode the entity so the
+  // resolved path points at the real file on disk.
+  t.is(Util.normalizeImageSource({ input: "src", inputPath: "src/index.html" }, "rose&amp;rose.jpg", {
+    isViaHtml: true,
+  }), path.join("src", "rose&rose.jpg"));
+
+  // Numeric entities decode too.
+  t.is(Util.normalizeImageSource({ input: "src", inputPath: "src/index.html" }, "rose&#38;rose.jpg", {
+    isViaHtml: true,
+  }), path.join("src", "rose&rose.jpg"));
+
+  // Without the isViaHtml flag the value is not entity-decoded.
+  t.is(Util.normalizeImageSource({ input: "src", inputPath: "src/index.html" }, "rose&rose.jpg"), path.join("src", "rose&rose.jpg"));
+});
+
 test("widths array should be ignored in hashing", t => {
   let stats = eleventyImage.statsSync("./test/bio-2017.jpg", {
     widths: [1280]

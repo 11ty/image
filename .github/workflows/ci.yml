@@ -15,6 +15,7 @@ jobs:
         uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b # 4.0.3
         with:
           node-version: ${{ matrix.node }}
+          # Do *not* use cache (see: tanstack cache poisoning vuln)
           # cache: npm
       - run: npm install
       - run: npm test

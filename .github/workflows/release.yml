@@ -15,6 +15,7 @@ jobs:
         with:
           node-version: "22"
           registry-url: 'https://registry.npmjs.org'
+          package-manager-cache: false
       - run: npm install -g npm@11.11.1
       - run: npm ci
       - run: npm test

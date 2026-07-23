@@ -49,7 +49,7 @@
     "sharp": "^0.35.3"
   },
   "devDependencies": {
-    "@11ty/eleventy": "^3.1.6",
+    "@11ty/eleventy": "^4.0.0-alpha.10",
     "@eslint/js": "^10.0.1",
     "@stylistic/eslint-plugin": "^5.10.0",
     "ava": "^8.0.1",

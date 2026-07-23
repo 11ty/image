@@ -487,6 +487,62 @@ test("#314 Prefer `eleventy:widths` over `width` attribute", async t => {
   t.is(results[0].content, `<picture><source type="image/webp" srcset="/virtual/KkPMmHd3hP-100.webp 100w"><img src="/virtual/KkPMmHd3hP-100.jpeg" alt="My ugly mug" width="100" height="66"></picture>`);
 });
 
+test("#306 `eleventy:sizes` overrides `sizes` default from config", async t => {
+  let elev = new Eleventy( "test", "test/_site", {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("virtual.html", `<img src="./bio-2017.jpg" alt="My ugly mug" eleventy:widths="100,200" eleventy:sizes="(max-width: 599px) 100vw, 600px">`);
+
+      eleventyConfig.addPlugin(eleventyImageTransformPlugin, {
+        dryRun: true, // don’t write image files!
+
+        defaultAttributes: {
+          sizes: "(max-width: 1024px) 100vw, 1600px",
+        }
+      });
+    }
+  });
+  elev.disableLogger();
+
+  let results = await elev.toJSON();
+  t.is(results[0].content, `<picture><source type="image/webp" srcset="/virtual/KkPMmHd3hP-100.webp 100w, /virtual/KkPMmHd3hP-200.webp 200w" sizes="(max-width: 599px) 100vw, 600px"><img src="/virtual/KkPMmHd3hP-100.jpeg" alt="My ugly mug" width="200" height="133" srcset="/virtual/KkPMmHd3hP-100.jpeg 100w, /virtual/KkPMmHd3hP-200.jpeg 200w" sizes="(max-width: 599px) 100vw, 600px"></picture>`);
+});
+
+test("#306 `eleventy:sizes` overrides `sizes` attribute", async t => {
+  let elev = new Eleventy( "test", "test/_site", {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("virtual.html", `<img src="./bio-2017.jpg" alt="My ugly mug" eleventy:widths="100,200" sizes="(max-width: 1024px) 100vw, 1600px" eleventy:sizes="(max-width: 599px) 100vw, 600px">`);
+
+      eleventyConfig.addPlugin(eleventyImageTransformPlugin, {
+        dryRun: true, // don’t write image files!
+      });
+    }
+  });
+  elev.disableLogger();
+
+  let results = await elev.toJSON();
+  t.is(results[0].content, `<picture><source type="image/webp" srcset="/virtual/KkPMmHd3hP-100.webp 100w, /virtual/KkPMmHd3hP-200.webp 200w" sizes="(max-width: 599px) 100vw, 600px"><img src="/virtual/KkPMmHd3hP-100.jpeg" alt="My ugly mug" width="200" height="133" srcset="/virtual/KkPMmHd3hP-100.jpeg 100w, /virtual/KkPMmHd3hP-200.jpeg 200w" sizes="(max-width: 599px) 100vw, 600px"></picture>`);
+});
+
+test("#306 `sizes` attribute overrides `sizes` default from config", async t => {
+  let elev = new Eleventy( "test", "test/_site", {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("virtual.html", `<img src="./bio-2017.jpg" alt="My ugly mug" eleventy:widths="100,200" sizes="(max-width: 599px) 100vw, 600px">`);
+
+      eleventyConfig.addPlugin(eleventyImageTransformPlugin, {
+        dryRun: true, // don’t write image files!
+
+        defaultAttributes: {
+          sizes: "(max-width: 1024px) 100vw, 1600px",
+        }
+      });
+    }
+  });
+  elev.disableLogger();
+
+  let results = await elev.toJSON();
+  t.is(results[0].content, `<picture><source type="image/webp" srcset="/virtual/KkPMmHd3hP-100.webp 100w, /virtual/KkPMmHd3hP-200.webp 200w" sizes="(max-width: 599px) 100vw, 600px"><img src="/virtual/KkPMmHd3hP-100.jpeg" alt="My ugly mug" width="200" height="133" srcset="/virtual/KkPMmHd3hP-100.jpeg 100w, /virtual/KkPMmHd3hP-200.jpeg 200w" sizes="(max-width: 599px) 100vw, 600px"></picture>`);
+});
+
 
 test("#236 Use with permalink with file name", async t => {
   let elev = new Eleventy( "test", "test/_site", {

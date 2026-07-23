@@ -1,4 +1,5 @@
 import path from "node:path";
+import { decodeHTMLAttribute } from "entities";
 
 export default class Util {
   static KEYS = {
@@ -48,6 +49,10 @@ export default class Util {
     }
 
     if(isViaHtml) {
+      // This reference came from HTML, so decode HTML entities in the attribute
+      // value (e.g. `rose&amp;rose.jpg` => `rose&rose.jpg`) before resolving the
+      // path, mirroring how a browser reads the attribute. See #307.
+      src = decodeHTMLAttribute(src);
       src = decodeURIComponent(src);
     }
 

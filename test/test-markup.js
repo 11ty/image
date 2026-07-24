@@ -185,7 +185,7 @@ test("Image markup (throws on missing sizes return html)", async t => {
       }
     }
   }), {
-    message: 'Missing `sizes` attribute on eleventy-img shortcode from: ./test/bio-2017.jpg. Workarounds: 1. Use a single output width for this image 2. Use `loading="lazy"` (which uses sizes="auto" though browser support currently varies)'
+    message: 'Missing `sizes` attribute on image optimization from: ./test/bio-2017.jpg. Workarounds: 1. Use a single output width for this image 2. Use `loading="lazy"` which will add `sizes="auto"` (browser support may vary)'
   });
 });
 

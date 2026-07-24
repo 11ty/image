@@ -53,12 +53,13 @@ const MINIMUM_TRANSPARENCY_TYPES = [
 
 export default class Image {
   #input;
-  #contents = {};
   #queue;
   #queuePromise;
   #buildLogger;
   #computedHash;
   #directoryManager;
+
+  static LOG_PREFIX = "[11ty/image]";
 
   constructor(src, options = {}) {
     if(!src) {
@@ -147,25 +148,26 @@ export default class Image {
     });
   }
 
+  // alias (this is an old name)
   getFileContents(overrideLocalFilePath) {
+    return this.getLocalFileContents(overrideLocalFilePath);
+  }
+
+  getLocalFileContents(overrideLocalFilePath) {
     if(!overrideLocalFilePath && this.isRemoteUrl) {
       return false;
     }
 
     let src = overrideLocalFilePath || this.src;
 
-    if(!this.#contents[src]) {
-      // perf: check to make sure it’s not a string first
-      if(typeof src !== "string" && Buffer.isBuffer(src)) {
-        this.#contents[src] = src;
-      } else {
-        debugAssets("[11ty/eleventy-img] Reading %o", src);
-        this.#contents[src] = fs.readFileSync(src);
-      }
+    // perf: check to make sure it’s not a string first
+    if(typeof src !== "string" && Buffer.isBuffer(src)) {
+      return src;
     }
 
-    // Always <Buffer>
-    return this.#contents[src];
+    debugAssets(Image.LOG_PREFIX + " Reading %o", src);
+
+    return fs.readFileSync(src); // Always <Buffer>
   }
 
   static getValidWidths(originalWidth, widths = [], allowUpscale = false, minimumThreshold = 1) {
@@ -357,19 +359,23 @@ export default class Image {
     return {};
   }
 
-  async getInput() {
+  get rawInput() {
     // internal cache
     if(!this.#input) {
       if(this.isRemoteUrl) {
         // fetch remote image Buffer
         this.#input = this.assetCache.queue();
       } else {
-        // not actually a promise, this is sync
-        this.#input = this.getFileContents();
+        // this is a string
+        this.#input = this.src;
       }
     }
 
     return this.#input;
+  }
+
+  get hasInputLoaded() {
+    return Boolean(this.#input) && typeof this.#input !== "string"; // a buffer
   }
 
   getHash() {
@@ -381,7 +387,8 @@ export default class Image {
     let hashContents = [];
 
     if(existsCache.exists(this.src)) {
-      let fileContents = this.getFileContents();
+      // This *is* a duplicate read but we intentionally don’t cache or reuse to reduce memory usage
+      let fileContents = fs.readFileSync(this.src);
 
       // If the file starts with whitespace or the '<' character, it might be SVG.
       // Otherwise, skip the expensive buffer.toString() call
@@ -647,8 +654,15 @@ export default class Image {
     return true;
   }
 
-  // src should be a file path to an image or a buffer
   async resize(input) {
+    if(!input) {
+      // Hand sharp the source directly and let it read only what it needs:
+      // a local file path is read from disk (avoids buffering the whole file
+      // in memory, see Issue #312) and a Buffer `src` is already the bytes.
+      // Only a remote URL has to be fetched into a buffer first.
+      input = await this.rawInput;
+    }
+
     let sharpInputImage = sharp(input, Object.assign({
       // Deprecated by sharp, use `failOn` option instead
       // https://github.com/lovell/sharp/blob/1533bf995acda779313fc178d2b9d46791349961/lib/index.d.ts#L915
@@ -670,7 +684,7 @@ export default class Image {
           let outputFileContents;
 
           if(this.options.dryRun || outputFormat === "svg" && this.options.svgCompressionSize === "br") {
-            outputFileContents = this.getFileContents(stat.outputPath);
+            outputFileContents = this.getLocalFileContents(stat.outputPath);
           }
 
           if(this.options.dryRun) {
@@ -750,7 +764,7 @@ export default class Image {
             } else {
               this.directoryManager.createFromFile(stat.outputPath);
 
-              debugAssets("[11ty/eleventy-img] Writing %o", stat.outputPath);
+              debugAssets(Image.LOG_PREFIX + " Writing %o", stat.outputPath);
 
               outputFilePromises.push(fsp.writeFile(stat.outputPath, hookResult).then(() => stat));
             }
@@ -771,7 +785,7 @@ export default class Image {
             // Should never write when dryRun is true
             this.directoryManager.createFromFile(stat.outputPath);
 
-            debugAssets("[11ty/eleventy-img] Writing %o", stat.outputPath);
+            debugAssets(Image.LOG_PREFIX + " Writing %o", stat.outputPath);
 
             outputFilePromises.push(
               sharpInstance.toFile(stat.outputPath)
@@ -820,18 +834,14 @@ export default class Image {
       });
     }
 
-    let input;
-    if(Util.isRemoteUrl(this.src)) {
-      // Fetch remote image to operate on it
-      // an `imageMetadataOverride` is no longer required for statsOnly on remote images
-      input = await this.getInput();
-    }
+    // Local src (string) or remote contents buffer
+    // Note: an `imageMetadataOverride` is no longer required for statsOnly on remote images
+    let input = await this.rawInput;
 
-    // Local images
     try {
       // Uses sharp to read dimensions/format, consistent with the main pipeline.
       // Related to https://github.com/11ty/image/issues/295
-      let metadata = await sharp(input || this.src).metadata();
+      let metadata = await sharp(input).metadata();
 
       return this.getFullStats(metadata);
     } catch(e) {
@@ -861,9 +871,7 @@ export default class Image {
 
         this.buildLogger.log(`Processing ${this.options.loggedSourceName || this.buildLogger.getFriendlyImageSource(this.src)}`, this.options);
 
-        let input = await this.getInput();
-
-        return this.resize(input);
+        return this.resize();
       } catch(e) {
         this.buildLogger.error(`Error: ${e.message} (via ${this.buildLogger.getFriendlyImageSource(this.src)})`, this.options);
 
@@ -917,4 +925,3 @@ export default class Image {
     throw new Error("`statsByDimensionsSync` was removed in Eleventy Image v7.0.0. Use the asynchronous API instead: `await Image(src, { statsOnly: true, imageMetadataOverride: { width, height /*, format */ } })`. " + Image.SYNC_ERROR_MESSAGE);
   }
 }
-

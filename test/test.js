@@ -1271,3 +1271,22 @@ test("#105 Transparent format output filtering (no minimum transparency formats 
   // must include one of: svg, png, or gif
   t.deepEqual(Object.keys(stats), ["webp", "jpeg"]);
 });
+
+test("#106 Production run should not load the source buffer into memory", async t => {
+  let src = "./test/bio-2017.jpg";
+  let options = {
+    widths: [347], // unique width to avoid in-memory cache collisions with other tests
+    formats: ["jpeg"],
+    outputDir: "./test/img/",
+  };
+
+  // `Image.create` returns the memoized instance that `eleventyImage` reuses,
+  // so we hold a direct reference to the exact instance under test.
+  let img = Image.create(src, options);
+  t.is(typeof img.hasInputLoaded, "boolean", "sanity: hasInputLoaded getter should exist");
+  t.false(img.hasInputLoaded, "no source buffer should be loaded before processing");
+
+  await eleventyImage(src, options);
+
+  t.false(img.hasInputLoaded, "source buffer should not be loaded for production local files");
+});

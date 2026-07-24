@@ -696,10 +696,10 @@ export default class Image {
           }
         }
 
-        // https://github.com/11ty/eleventy-img/issues/244
+        // https://github.com/11ty/image/issues/244
         sharpInstance.keepIccProfile();
 
-        // Output images do not include orientation metadata (https://github.com/11ty/eleventy-img/issues/52)
+        // Output images do not include orientation metadata (https://github.com/11ty/image/issues/52)
         // Use sharp.rotate to bake orientation into the image (https://github.com/lovell/sharp/blob/v0.32.6/docs/api-operation.md#rotate):
         // > If no angle is provided, it is determined from the EXIF data. Mirroring is supported and may infer the use of a flip operation.
         // > The use of rotate without an angle will remove the EXIF Orientation tag, if any.
@@ -815,7 +815,7 @@ export default class Image {
     // Local images
     try {
       // Uses sharp to read dimensions/format, consistent with the main pipeline.
-      // Related to https://github.com/11ty/eleventy-img/issues/295
+      // Related to https://github.com/11ty/image/issues/295
       let metadata = await sharp(input || this.src).metadata();
 
       return this.getFullStats(metadata);
@@ -881,10 +881,10 @@ export default class Image {
     return img;
   }
 
-  static SYNC_ERROR_MESSAGE = "For synchronous-only template contexts (Handlebars, older Nunjucks), use the HTML Transform (post-processing) method instead: https://www.11ty.dev/docs/plugins/image/#html-transform. See https://github.com/11ty/eleventy-img/issues/211";
+  static SYNC_ERROR_MESSAGE = "For synchronous-only template contexts (Handlebars, older Nunjucks), use the HTML Transform (post-processing) method instead: https://www.11ty.dev/docs/plugins/image/#html-transform. See https://github.com/11ty/image/issues/211";
 
   /* The synchronous `stats*` methods were removed in Eleventy Image v7.0.0.
-  * See https://github.com/11ty/eleventy-img/issues/211
+  * See https://github.com/11ty/image/issues/211
   */
   statsSync() {
     throw new Error("`statsSync` was removed in Eleventy Image v7.0.0. Use the asynchronous API instead: `await Image(src, { statsOnly: true, /* …options */ })`. " + Image.SYNC_ERROR_MESSAGE);

@@ -18,7 +18,7 @@ export default class Util {
     return obj;
   }
 
-  // Temporary alias for changes made in https://github.com/11ty/eleventy-img/pull/138
+  // Temporary alias for changes made in https://github.com/11ty/image/pull/138
   static isFullUrl(url) {
     return this.isRemoteUrl(url);
   }

@@ -1272,23 +1272,21 @@ test("#105 Transparent format output filtering (no minimum transparency formats 
   t.deepEqual(Object.keys(stats), ["webp", "jpeg"]);
 });
 
-import { memCache } from "../src/caches.js";
-
-test("#106 Production run should not load source buffer into memory", async t => {
-  // Use unique width to avoid cache collision with other tests
-  await eleventyImage("./test/bio-2017.jpg", {
-    widths: [347],
+test("#106 Production run should not load the source buffer into memory", async t => {
+  let src = "./test/bio-2017.jpg";
+  let options = {
+    widths: [347], // unique width to avoid in-memory cache collisions with other tests
     formats: ["jpeg"],
     outputDir: "./test/img/",
-  });
+  };
 
-  // Verify the cached Image instance didn't load the source buffer
-  for (let key of Object.keys(memCache.cache)) {
-    let img = memCache.cache[key].results;
-    if (key.includes("347") && typeof img.hasLoadedBuffer !== "undefined") {
-      t.false(img.hasLoadedBuffer, "Source buffer should not be loaded for production local files");
-      return;
-    }
-  }
-  t.pass();
+  // `Image.create` returns the memoized instance that `eleventyImage` reuses,
+  // so we hold a direct reference to the exact instance under test.
+  let img = Image.create(src, options);
+  t.is(typeof img.hasInputLoaded, "boolean", "sanity: hasInputLoaded getter should exist");
+  t.false(img.hasInputLoaded, "no source buffer should be loaded before processing");
+
+  await eleventyImage(src, options);
+
+  t.false(img.hasInputLoaded, "source buffer should not be loaded for production local files");
 });

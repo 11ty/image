@@ -149,5 +149,11 @@ Object.assign(queueImage, {
 });
 
 // Eleventy Plugins (named exports only)
-export { eleventyImageTransformPlugin } from "./src/transform-plugin.js";
-export { eleventyImageOnRequestDuringServePlugin } from "./src/on-request-during-serve-plugin.js";
+export {
+  eleventyImageTransformPlugin,
+  eleventyImageTransformPlugin as imageTransformPlugin
+} from "./src/transform-plugin.js";
+export {
+  eleventyImageOnRequestDuringServePlugin,
+  eleventyImageOnRequestDuringServePlugin  as imageOnRequestDuringServePlugin
+} from "./src/on-request-during-serve-plugin.js";

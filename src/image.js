@@ -7,6 +7,7 @@ const getImageSize = require("image-size");
 const brotliSize = require("brotli-size");
 const debugUtil = require("debug");
 const { Fetch } = require("@11ty/eleventy-fetch");
+const { isPlainObject } = require("@11ty/eleventy-utils");
 
 const Util = require("./util.js");
 const ImagePath = require("./image-path.js");
@@ -416,14 +417,21 @@ class Image {
       "sharpPngOptions",
       "sharpJpegOptions",
       "sharpAvifOptions",
-      "cacheKey"
+      "manualCacheKey"
     ].sort();
 
     let hashObject = {};
-    // The code currently assumes are keysToKeep are Object literals (see Util.getSortedObject)
     for(let key of keysToKeep) {
-      if(this.options[key]) {
+      if(this.options[key] === undefined) {
+        continue;
+      }
+
+      // Object literals are sorted for stable hashes (see Util.getSortedObject);
+      // primitives (e.g. a `manualCacheKey` number or string) are passed through as-is.
+      if(isPlainObject(this.options[key])) {
         hashObject[key] = Util.getSortedObject(this.options[key]);
+      } else {
+        hashObject[key] = this.options[key];
       }
     }
 
@@ -682,7 +690,14 @@ class Image {
             throw new Error("Expected `function` type in `transform` option. Received: " + transform);
           }
 
-          await transform(sharpInstance, { ...stat });
+          // Only expose the stable, target-resize fields. Other `stat` entries
+          // (url, srcset, filename, outputPath) are computed from the pre-transform
+          // width and would be stale here — `getStat()` is re-run after the transform.
+          await transform(sharpInstance, {
+            width: stat.width,
+            height: stat.height,
+            format: stat.format,
+          });
 
           // Resized in a transform (maybe for a crop)
           let dims = Image.getDimensionsFromSharp(sharpInstance, stat);

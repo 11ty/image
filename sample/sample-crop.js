@@ -43,15 +43,15 @@ function getMaxCropWidth(originalWidth, originalHeight) {
     widths,
     formats: ["webp"],
     dryRun: true,
-    transform: function(sharp, stats) {
+    transform: function(sharp, stat) {
       sharp.resize({
-        width: stats.width,
-        height: Math.floor(stats.width / cropRatio),
+        width: stat.width,
+        height: Math.floor(stat.width / cropRatio),
         fit: Sharp.fit.cover,
         position: Sharp.strategy.entropy,
       });
     },
-    cacheKey: cropRatio,
+    manualCacheKey: cropRatio,
   });
 
   console.log(results);

@@ -93,7 +93,7 @@ function createImage(src, opts = {}) {
 
 export default function queueImage(src, opts = {}) {
   if(src.constructor?.name === "UserConfig") {
-    throw new Error(`Eleventy Image’s default export is not an Eleventy Plugin and cannot be used with \`eleventyConfig.addPlugin()\`. Use the \`eleventyImageTransformPlugin\` named export instead, like this: \`import { eleventyImageTransformPlugin } from '@11ty/eleventy-img';\` or this: \`const { eleventyImageTransformPlugin } = require('@11ty/eleventy-img');\``);
+    throw new Error(`Image’s default export is not an Eleventy or Build Awesome Plugin and cannot be used with \`$config.addPlugin()\`. Use the \`imageTransformPlugin\` named export instead, like this: \`import { imageTransformPlugin } from '@11ty/eleventy-img';\` or: \`const { imageTransformPlugin } = require('@11ty/eleventy-img');\` (in Node 20.19 and newer)`);
   }
 
   let img = createImage(src, opts);
@@ -150,10 +150,10 @@ Object.assign(queueImage, {
 
 // Eleventy Plugins (named exports only)
 export {
-  eleventyImageTransformPlugin,
-  eleventyImageTransformPlugin as imageTransformPlugin
+  imageTransformPlugin,
+  imageTransformPlugin as eleventyImageTransformPlugin,
 } from "./src/transform-plugin.js";
 export {
-  eleventyImageOnRequestDuringServePlugin,
-  eleventyImageOnRequestDuringServePlugin  as imageOnRequestDuringServePlugin
+  imageOnRequestDuringServePlugin,
+  imageOnRequestDuringServePlugin as eleventyImageOnRequestDuringServePlugin,
 } from "./src/on-request-during-serve-plugin.js";

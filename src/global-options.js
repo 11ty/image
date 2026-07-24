@@ -1,7 +1,7 @@
 import path from "node:path";
 import os from "node:os";
 
-import eleventyImage from "../img.js";
+import queueImage from "../img.js";
 import Util from "./util.js";
 import svgHook from "./format-hooks/svg.js";
 
@@ -105,7 +105,7 @@ export function getGlobalOptions(eleventyConfig, options, via) {
   let directories = eleventyConfig.directories;
   let globalOptions = Object.assign({
     packages: {
-      image: eleventyImage,
+      image: queueImage,
     },
     outputDir: path.join(directories.output, options.urlPath || ""),
     failOnError: true,

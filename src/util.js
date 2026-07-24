@@ -70,13 +70,13 @@ export default class Util {
     return generatedVia === this.KEYS.requested;
   }
 
-  static addConfig(eleventyConfig, options) {
-    if(!eleventyConfig) {
+  static addConfig($config, options) {
+    if(!$config) {
       return;
     }
 
     Object.defineProperty(options, "eleventyConfig", {
-      value: eleventyConfig,
+      value: $config,
       enumerable: false,
     });
   }

@@ -845,7 +845,7 @@ export default class Image {
 
       return this.getFullStats(metadata);
     } catch(e) {
-      throw new Error(`Eleventy Image error (statsOnly): reading image metadata on "${this.src}" failed. Original error: ${e.message}`, {
+      throw new Error(`Image error (statsOnly): reading image metadata on "${this.src}" failed. Original error: ${e.message}`, {
         cause: e
       });
     }
@@ -910,18 +910,18 @@ export default class Image {
   * See https://github.com/11ty/image/issues/211
   */
   statsSync() {
-    throw new Error("`statsSync` was removed in Eleventy Image v7.0.0. Use the asynchronous API instead: `await Image(src, { statsOnly: true, /* …options */ })`. " + Image.SYNC_ERROR_MESSAGE);
+    throw new Error("`statsSync` was removed in Image v7.0.0. Use the asynchronous API instead: `await Image(src, { statsOnly: true, /* …options */ })`. " + Image.SYNC_ERROR_MESSAGE);
   }
 
   static statsSync() {
-    throw new Error("`statsSync` was removed in Eleventy Image v7.0.0. Use the asynchronous API instead: `await Image(src, { statsOnly: true, /* …options */ })`. " + Image.SYNC_ERROR_MESSAGE);
+    throw new Error("`statsSync` was removed in Image v7.0.0. Use the asynchronous API instead: `await Image(src, { statsOnly: true, /* …options */ })`. " + Image.SYNC_ERROR_MESSAGE);
   }
 
   statsByDimensionsSync() {
-    throw new Error("`statsByDimensionsSync` was removed in Eleventy Image v7.0.0. Use the asynchronous API instead: `await Image(src, { statsOnly: true, imageMetadataOverride: { width, height /*, format */ } })`. " + Image.SYNC_ERROR_MESSAGE);
+    throw new Error("`statsByDimensionsSync` was removed in Image v7.0.0. Use the asynchronous API instead: `await Image(src, { statsOnly: true, imageMetadataOverride: { width, height /*, format */ } })`. " + Image.SYNC_ERROR_MESSAGE);
   }
 
   static statsByDimensionsSync() {
-    throw new Error("`statsByDimensionsSync` was removed in Eleventy Image v7.0.0. Use the asynchronous API instead: `await Image(src, { statsOnly: true, imageMetadataOverride: { width, height /*, format */ } })`. " + Image.SYNC_ERROR_MESSAGE);
+    throw new Error("`statsByDimensionsSync` was removed in Image v7.0.0. Use the asynchronous API instead: `await Image(src, { statsOnly: true, imageMetadataOverride: { width, height /*, format */ } })`. " + Image.SYNC_ERROR_MESSAGE);
   }
 }

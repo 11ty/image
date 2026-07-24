@@ -162,7 +162,7 @@ test("Image markup (throws on missing alt)", async t => {
   t.throws(() => generateHTML(results, {
     src: "./test/bio-2017.jpg"
   }), {
-    message: "Missing `alt` attribute on eleventy-img shortcode from: ./test/bio-2017.jpg"
+    message: "Missing `alt` attribute on `@11ty/eleventy-img` image optimization from: ./test/bio-2017.jpg"
   });
 });
 
@@ -171,7 +171,7 @@ test("Image markup (throws on missing alt return html)", async t => {
     dryRun: true,
     returnType: "html"
   }), {
-    message: "Missing `alt` attribute on eleventy-img shortcode from: ./test/bio-2017.jpg"
+    message: "Missing `alt` attribute on `@11ty/eleventy-img` image optimization from: ./test/bio-2017.jpg"
   });
 });
 

@@ -9,7 +9,7 @@ export default async function createSvg(sharpInstance) {
   if(svgBuffer) { // remote URL already has buffer
     return svgBuffer;
   } else { // local file system
-    debugAssets("[11ty/eleventy-img] Reading %o", input.file);
+    debugAssets("[11ty/image] Reading %o", input.file);
     return fs.readFileSync(input.file);
   }
 };

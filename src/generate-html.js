@@ -42,7 +42,7 @@ export function generateObject(metadata, userDefinedImgAttributes = {}, userDefi
 
   if(imgAttributes.alt === undefined) {
     // You bet we throw an error on missing alt (alt="" works okay)
-    throw new Error(`Missing \`alt\` attribute on eleventy-img shortcode from: ${originalSrc}`);
+    throw new Error(`Missing \`alt\` attribute on \`@11ty/eleventy-img\` image optimization from: ${originalSrc}`);
   }
 
   let formats = Object.keys(metadata);
@@ -53,7 +53,7 @@ export function generateObject(metadata, userDefinedImgAttributes = {}, userDefi
   }
 
   if(entryCount === 0) {
-    throw new Error("No image results found from `eleventy-img` in generateHTML. Expects a results object similar to: https://www.11ty.dev/docs/plugins/image/#usage.");
+    throw new Error("No image results found from `@11ty/eleventy-img` in generateHTML. Expects a results object similar to: https://www.11ty.dev/docs/plugins/image/#usage.");
   }
 
   let lowsrc;

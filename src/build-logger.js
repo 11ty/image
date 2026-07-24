@@ -51,7 +51,7 @@ export default class BuildLogger {
     this.#eleventyConfig.logger.logWithOptions(Object.assign({
       message: `${message}${options.generatedVia ? ` (${options.generatedVia})` : ""}`,
       type: "log",
-      prefix: "[11ty/eleventy-img]"
+      prefix: "[11ty/image]"
     }, logOptions));
   }
 

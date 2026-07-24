@@ -1,4 +1,4 @@
-import eleventyImage from "../img.js";
+import queueImage from "../img.js";
 import Util from "./util.js";
 import { generateObject } from "./generate-html.js";
 
@@ -98,7 +98,7 @@ export async function imageAttributesToPosthtmlNode(attributes, instanceOptions,
   let options = Object.assign({}, globalPluginOptions, instanceOptions);
   Util.addConfig(globalPluginOptions.eleventyConfig, options);
 
-  let metadata = await eleventyImage(attributes.src, options);
+  let metadata = await queueImage(attributes.src, options);
   let pictureAttributes = getPictureAttributesFromImgNode(attributes);
 
   cleanAttrs(attributes);

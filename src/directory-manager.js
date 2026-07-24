@@ -17,7 +17,7 @@ export default class DirectoryManager {
     }
 
     this.#dirs.add(dir);
-    debugAssets("[11ty/eleventy-img] Creating directory %o", dir);
+    debugAssets("[11ty/image] Creating directory %o", dir);
     fs.mkdirSync(dir, { recursive: true });
   }
 

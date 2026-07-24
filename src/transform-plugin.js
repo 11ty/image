@@ -2,7 +2,7 @@ import path from "node:path";
 import Util from "./util.js";
 import { imageAttributesToPosthtmlNode, getOutputDirectory, cleanTag, isIgnored, isOptional } from "./image-attrs-to-posthtml-node.js";
 import { getGlobalOptions } from "./global-options.js";
-import { eleventyImageOnRequestDuringServePlugin } from "./on-request-during-serve-plugin.js";
+import { imageOnRequestDuringServePlugin } from "./on-request-during-serve-plugin.js";
 
 const PLACEHOLDER_DATA_URI = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=";
 
@@ -140,7 +140,7 @@ function transformTag(context, sourceNode, rootTargetNode, opts) {
   });
 }
 
-export function eleventyImageTransformPlugin(eleventyConfig, options = {}) {
+export function imageTransformPlugin($config, options = {}) {
   options = Object.assign({
     extensions: "html",
     transformOnRequest: process.env.ELEVENTY_RUN_MODE === "serve",
@@ -148,12 +148,12 @@ export function eleventyImageTransformPlugin(eleventyConfig, options = {}) {
 
   if(options.transformOnRequest !== false) {
     // Add the on-request plugin automatically (unless opt-out in this plugins options only)
-    eleventyConfig.addPlugin(eleventyImageOnRequestDuringServePlugin);
+    $config.addPlugin(imageOnRequestDuringServePlugin);
   }
 
-  let opts = getGlobalOptions(eleventyConfig, options, "transform");
+  let opts = getGlobalOptions($config, options, "transform");
 
-  eleventyConfig.addJavaScriptFunction("__private_eleventyImageTransformConfigurationOptions", () => {
+  $config.addJavaScriptFunction("__private_eleventyImageTransformConfigurationOptions", () => {
     return opts;
   });
 
@@ -196,11 +196,11 @@ export function eleventyImageTransformPlugin(eleventyConfig, options = {}) {
     };
   }
 
-  if(!eleventyConfig.htmlTransformer || !("addPosthtmlPlugin" in eleventyConfig.htmlTransformer)) {
-    throw new Error("[@11ty/eleventy-img] `eleventyImageTransformPlugin` is not compatible with this version of Eleventy. You will need to use v3.0.0 or newer.");
+  if(!$config.htmlTransformer || !("addPosthtmlPlugin" in $config.htmlTransformer)) {
+    throw new Error("[@11ty/image] `imageTransformPlugin` is not compatible with this version of Build Awesome or Eleventy. You will need to use v3.0.0 or newer.");
   }
 
-  eleventyConfig.htmlTransformer.addPosthtmlPlugin(options.extensions, posthtmlPlugin, {
+  $config.htmlTransformer.addPosthtmlPlugin(options.extensions, posthtmlPlugin, {
     priority: -1, // we want this to go before <base> or inputpath to url
   });
 }

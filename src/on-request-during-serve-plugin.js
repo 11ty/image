@@ -2,23 +2,23 @@ import fs from "node:fs";
 import debugUtil from "debug";
 import { TemplatePath } from "@11ty/eleventy-utils";
 
-import eleventyImage, { setupLogger } from "../img.js";
+import queueImage, { setupLogger } from "../img.js";
 import Util from "./util.js";
 
 const debug = debugUtil("Eleventy:Image");
 
-export function eleventyImageOnRequestDuringServePlugin(eleventyConfig, options = {}) {
+export function imageOnRequestDuringServePlugin($config, options = {}) {
   try {
     // Throw an error if the application is not using Eleventy 3.0.0-alpha.7 or newer (including prereleases).
-    eleventyConfig.versionCheck(">=3.0.0-alpha.7");
+    $config.versionCheck(">=3.0.0-alpha.7");
   } catch(e) {
-    console.log( `[11ty/eleventy-img] Warning: your version of Eleventy is incompatible with the dynamic image rendering plugin (see \`eleventyImageOnRequestDuringServePlugin\`). Any dynamically rendered images will 404 (be missing) during --serve mode but will not affect the standard build output: ${e.message}` );
+    console.log( `[11ty/image] Warning: your version of Eleventy is incompatible with the dynamic image rendering plugin (see \`imageOnRequestDuringServePlugin\`). Any dynamically rendered images will 404 (be missing) during --serve mode but will not affect the standard build output: ${e.message}` );
   }
 
-  setupLogger(eleventyConfig, {});
+  setupLogger($config, {});
 
   // Eleventy 3.0 or newer only.
-  eleventyConfig.setServerOptions({
+  $config.setServerOptions({
     onRequest: {
       // TODO work with dev-server’s option for `injectedScriptsFolder`
       "/.11ty/image/": async function({ url }) {
@@ -30,7 +30,7 @@ export function eleventyImageOnRequestDuringServePlugin(eleventyConfig, options 
 
         let defaultOptions;
         if(via === "transform") {
-          defaultOptions = eleventyConfig.getFilter("__private_eleventyImageTransformConfigurationOptions")();
+          defaultOptions = $config.getFilter("__private_eleventyImageTransformConfigurationOptions")();
         }
         // if using this plugin directly (not via  transform), global default options will need to be passed in to the `addPlugin` call directly
 
@@ -49,7 +49,7 @@ export function eleventyImageOnRequestDuringServePlugin(eleventyConfig, options 
           generatedVia: Util.KEYS.requested,
         });
 
-        Util.addConfig(eleventyConfig, opts);
+        Util.addConfig($config, opts);
 
         debug( `%o transformed on request to %o at %o width.`, src, imageFormat, width );
 
@@ -63,7 +63,7 @@ export function eleventyImageOnRequestDuringServePlugin(eleventyConfig, options 
             }
           }
 
-          let stats = await eleventyImage(src, opts);
+          let stats = await queueImage(src, opts);
 
           let format = Object.keys(stats).pop();
           let stat = stats[format][0];

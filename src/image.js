@@ -891,7 +891,7 @@ export default class Image {
   }
 
   static statsSync() {
-    throw new Error("`statsSync` was removed in Eleventy Image v7.0.0. Use the asynchronous API instead: `await Image(src, { statsOnly: true, /* …options */ })`. " + this.SYNC_ERROR_MESSAGE);
+    throw new Error("`statsSync` was removed in Eleventy Image v7.0.0. Use the asynchronous API instead: `await Image(src, { statsOnly: true, /* …options */ })`. " + Image.SYNC_ERROR_MESSAGE);
   }
 
   statsByDimensionsSync() {
@@ -899,7 +899,7 @@ export default class Image {
   }
 
   static statsByDimensionsSync() {
-    throw new Error("`statsByDimensionsSync` was removed in Eleventy Image v7.0.0. Use the asynchronous API instead: `await Image(src, { statsOnly: true, imageMetadataOverride: { width, height /*, format */ } })`. " + this.SYNC_ERROR_MESSAGE);
+    throw new Error("`statsByDimensionsSync` was removed in Eleventy Image v7.0.0. Use the asynchronous API instead: `await Image(src, { statsOnly: true, imageMetadataOverride: { width, height /*, format */ } })`. " + Image.SYNC_ERROR_MESSAGE);
   }
 }
 

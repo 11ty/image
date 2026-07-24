@@ -5,13 +5,13 @@ import eleventyImage from "../img.js";
 import Util from "./util.js";
 import svgHook from "./format-hooks/svg.js";
 
-export const DEFAULTS = {
+export const getDefaults = () => ({
   widths: ["auto"],
   formats: ["webp", "jpeg"], // "png", "svg", "avif"
 
   formatFiltering: ["transparent", "animated"],
 
-  // Via https://github.com/11ty/eleventy-img/issues/258
+  // Via https://github.com/11ty/image/issues/258
   concurrency: Math.min(Math.max(8, os.availableParallelism()), 16),
 
   urlPath: "/img/",
@@ -55,7 +55,10 @@ export const DEFAULTS = {
   // Useful when used with `urlFormat` above.
   // Better than .statsSync* functions, because this will use the in-memory cache and de-dupe requests. Those will not.
   statsOnly: false,
-  remoteImageMetadata: {}, // For `statsOnly` remote images, this needs to be populated with { width, height, format? }
+  // For `statsOnly`, supply known dimensions to skip reading the image (works for both local and remote sources): { width, height, format? }
+  imageMetadataOverride: {},
+  // @deprecated Use `imageMetadataOverride` instead. Kept as a backwards-compatible alias.
+  remoteImageMetadata: {},
 
   useCache: true, // in-memory and disk cache
   dryRun: false, // Also returns a buffer instance in the return object. Doesn’t write anything to the file system
@@ -69,7 +72,7 @@ export const DEFAULTS = {
   // e.g. when using `widths: [400, 800]`, the source image would need to be at least (400 * 1.25 =) 500px wide
   // to generate two outputs (400px, 500px). If the source image is less than 500px, only one output will
   // be generated (400px).
-  // Read more at https://github.com/11ty/eleventy-img/issues/184 and https://github.com/11ty/eleventy-img/pull/190
+  // Read more at https://github.com/11ty/image/issues/184 and https://github.com/11ty/image/pull/190
   minimumThreshold: 1.25,
 
   // During --serve mode in Eleventy, this will generate images on request instead of part of the build skipping
@@ -90,13 +93,13 @@ export const DEFAULTS = {
     whitespaceMode: "inline", // "block"
 
     // the <img> will use the largest dimensions for width/height (when multiple output widths are specified)
-    // see https://github.com/11ty/eleventy-img/issues/63
+    // see https://github.com/11ty/image/issues/63
     fallback: "largest", // or "smallest"
   },
 
   // v5.0.0 Removed `extensions`, option to override output format with new file extension. It wasn’t being used anywhere or documented.
-  // v6.0.0, removed `useCacheValidityInHash: true` see https://github.com/11ty/eleventy-img/issues/146#issuecomment-2555741376
-};
+  // v6.0.0, removed `useCacheValidityInHash: true` see https://github.com/11ty/image/issues/146#issuecomment-2555741376
+});
 
 export function getGlobalOptions(eleventyConfig, options, via) {
   let directories = eleventyConfig.directories;

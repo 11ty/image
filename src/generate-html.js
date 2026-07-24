@@ -9,6 +9,13 @@ function generateSrcset(metadataFormatEntry) {
     return "";
   }
 
+  // A single candidate needs no `w` descriptor (a bare URL defaults to 1x density),
+  // which also means it doesn’t require a `sizes` attribute to be valid HTML. See #298.
+  // https://html.spec.whatwg.org/multipage/images.html#srcset-attributes
+  if(metadataFormatEntry.length === 1) {
+    return metadataFormatEntry[0].url;
+  }
+
   return metadataFormatEntry.map(entry => entry.srcset).join(", ");
 }
 
@@ -95,17 +102,20 @@ export function generateObject(metadata, userDefinedImgAttributes = {}, userDefi
   // Per the HTML specification sizes is required srcset is using the `w` unit
   // https://html.spec.whatwg.org/dev/semantics.html#the-link-element:attr-link-imagesrcset-4
   // Using the default "100vw" is okay
-  let missingSizesErrorMessage = `Missing \`sizes\` attribute on eleventy-img shortcode from: ${originalSrc}. Workarounds: 1. Use a single output width for this image 2. Use \`loading="lazy"\` (which uses sizes="auto" though browser support currently varies)`;
+  let missingSizesErrorMessage = `Missing \`sizes\` attribute on image optimization from: ${originalSrc}. Workarounds: 1. Use a single output width for this image 2. Use \`loading="lazy"\` which will add \`sizes="auto"\` (browser support may vary)`;
+
+  // Only a multi-candidate srcset uses a `w` descriptor, which requires `sizes`. When
+  // `loading="lazy"` is set (and `sizes` isn’t already specified), default to `sizes="auto"`
+  // (browser support varies) instead of throwing. A single candidate drops the descriptor
+  // (see `generateSrcset`) and needs no `sizes`, so don’t add one in that case (see #298).
+  if(lowsrc.length > 1 && !imgAttributes.sizes && imgAttributes.loading === "lazy") {
+    imgAttributes.sizes = "auto";
+  }
 
   // <img srcset>: one format and multiple sizes
   if(formats.length === 1) { // implied entryCount > 1
     if(entryCount > 1 && !imgAttributes.sizes) {
-      // Use `sizes="auto"` when using `loading="lazy"` instead of throwing an error.
-      if(imgAttributes.loading === "lazy") {
-        imgAttributes.sizes = "auto";
-      } else {
-        throw new Error(missingSizesErrorMessage);
-      }
+      throw new Error(missingSizesErrorMessage);
     }
 
     let imgAttributesCopy = Object.assign({}, imgAttributesWithoutSizes);
@@ -122,11 +132,7 @@ export function generateObject(metadata, userDefinedImgAttributes = {}, userDefi
     return imageFormat.length > 0 && (lowsrcFormat !== imageFormat[0].format);
   }).forEach(imageFormat => {
     if(imageFormat.length > 1 && !imgAttributes.sizes) {
-      if(imgAttributes.loading === "lazy") {
-        imgAttributes.sizes = "auto";
-      } else {
-        throw new Error(missingSizesErrorMessage);
-      }
+      throw new Error(missingSizesErrorMessage);
     }
 
     let sourceAttrs = {

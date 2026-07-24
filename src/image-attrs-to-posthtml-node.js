@@ -9,6 +9,7 @@ const CHILDREN_OBJECT_KEY = "@children";
 const ATTR = {
   IGNORE: `${ATTR_PREFIX}ignore`,
   WIDTHS: `${ATTR_PREFIX}widths`,
+  SIZES: `${ATTR_PREFIX}sizes`,
   FORMATS: `${ATTR_PREFIX}formats`,
   OUTPUT: `${ATTR_PREFIX}output`,
   OPTIONAL: `${ATTR_PREFIX}optional`,
@@ -78,12 +79,20 @@ export async function imageAttributesToPosthtmlNode(attributes, instanceOptions,
   if(attributes.width && isValidSimpleWidthAttribute(attributes.width)) {
     // Support `width` but only single value
     instanceOptions.widths = [ parseInt(attributes.width, 10) ];
-  } else if(attributes[ATTR.WIDTHS] && typeof attributes[ATTR.WIDTHS] === "string") {
+  }
+
+  // Breaking in v7 (Issue #314): eleventy:width now overrides `width` attribute
+  if(attributes[ATTR.WIDTHS] && typeof attributes[ATTR.WIDTHS] === "string") {
     instanceOptions.widths = attributes[ATTR.WIDTHS].split(",").map(entry => parseInt(entry, 10));
   }
 
   if(attributes[ATTR.FORMATS] && typeof attributes[ATTR.FORMATS] === "string") {
     instanceOptions.formats = attributes[ATTR.FORMATS].split(",");
+  }
+
+  // Issue #306: `eleventy:sizes` overrides the `sizes` attribute (and any `sizes` default from the config)
+  if(attributes[ATTR.SIZES] && typeof attributes[ATTR.SIZES] === "string") {
+    attributes.sizes = attributes[ATTR.SIZES];
   }
 
   let options = Object.assign({}, globalPluginOptions, instanceOptions);

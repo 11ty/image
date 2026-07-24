@@ -16,7 +16,7 @@ test("Using the transform plugin", async t => {
   elev.disableLogger();
 
   let results = await elev.toJSON();
-  t.is(results[0].content, `<picture><source type="image/webp" srcset="/virtual/KkPMmHd3hP-1280.webp 1280w"><img src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" width="1280" height="853"></picture>`);
+  t.is(results[0].content, `<picture><source type="image/webp" srcset="/virtual/KkPMmHd3hP-1280.webp"><img src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" width="1280" height="853"></picture>`);
 });
 
 test("Using the transform plugin, data URI #238", async t => {
@@ -353,7 +353,7 @@ test("Using the transform plugin, <picture> to <picture> #214", async t => {
   elev.disableLogger();
 
   let results = await elev.toJSON();
-  t.is(results[0].content, `<picture class="outer"><source type="image/webp" srcset="/virtual/KkPMmHd3hP-1280.webp 1280w"><img src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" class="inner" width="1280" height="853"></picture>`);
+  t.is(results[0].content, `<picture class="outer"><source type="image/webp" srcset="/virtual/KkPMmHd3hP-1280.webp"><img src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" class="inner" width="1280" height="853"></picture>`);
 });
 
 test("Using the transform plugin, <picture> to <img> #214", async t => {
@@ -387,7 +387,7 @@ test("Using the transform plugin, <img> to <picture> #214", async t => {
   elev.disableLogger();
 
   let results = await elev.toJSON();
-  t.is(results[0].content, `<picture class="outer"><source type="image/webp" srcset="/virtual/KkPMmHd3hP-1280.webp 1280w"><img src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" class="inner" width="1280" height="853"></picture>`);
+  t.is(results[0].content, `<picture class="outer"><source type="image/webp" srcset="/virtual/KkPMmHd3hP-1280.webp"><img src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" class="inner" width="1280" height="853"></picture>`);
 });
 
 test("Using the transform plugin, <img> to <img>, keeps slot attribute #241", async t => {
@@ -420,7 +420,7 @@ test("Using the transform plugin, <img> to <picture>, keeps slot attribute #241"
   elev.disableLogger();
 
   let results = await elev.toJSON();
-  t.is(results[0].content, `<picture><source type="image/webp" srcset="/virtual/KkPMmHd3hP-1280.webp 1280w"><img src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" slot="image-1" width="1280" height="853"></picture>`);
+  t.is(results[0].content, `<picture><source type="image/webp" srcset="/virtual/KkPMmHd3hP-1280.webp"><img src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" slot="image-1" width="1280" height="853"></picture>`);
 });
 
 test("#234 Use existing `width` attribute for `widths` config", async t => {
@@ -436,7 +436,7 @@ test("#234 Use existing `width` attribute for `widths` config", async t => {
   elev.disableLogger();
 
   let results = await elev.toJSON();
-  t.is(results[0].content, `<picture><source type="image/webp" srcset="/virtual/KkPMmHd3hP-200.webp 200w"><img src="/virtual/KkPMmHd3hP-200.jpeg" alt="My ugly mug" width="200" height="133"></picture>`);
+  t.is(results[0].content, `<picture><source type="image/webp" srcset="/virtual/KkPMmHd3hP-200.webp"><img src="/virtual/KkPMmHd3hP-200.jpeg" alt="My ugly mug" width="200" height="133"></picture>`);
 });
 
 test("#234 Use existing `width` attribute for `widths` config (huge width uses max intrinsic)", async t => {
@@ -452,7 +452,7 @@ test("#234 Use existing `width` attribute for `widths` config (huge width uses m
   elev.disableLogger();
 
   let results = await elev.toJSON();
-  t.is(results[0].content, `<picture><source type="image/webp" srcset="/virtual/KkPMmHd3hP-1280.webp 1280w"><img src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" width="1280" height="853"></picture>`);
+  t.is(results[0].content, `<picture><source type="image/webp" srcset="/virtual/KkPMmHd3hP-1280.webp"><img src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" width="1280" height="853"></picture>`);
 });
 
 test("#234 Use existing `width` attribute for `widths` config (comma separated widths are ignored as invalid. Discourage invalid `width` HTML attribute, use eleventy:widths instead)", async t => {
@@ -468,8 +468,81 @@ test("#234 Use existing `width` attribute for `widths` config (comma separated w
   elev.disableLogger();
 
   let results = await elev.toJSON();
-  t.is(results[0].content, `<picture><source type="image/webp" srcset="/virtual/KkPMmHd3hP-1280.webp 1280w"><img src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" width="1280" height="853"></picture>`);
+  t.is(results[0].content, `<picture><source type="image/webp" srcset="/virtual/KkPMmHd3hP-1280.webp"><img src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" width="1280" height="853"></picture>`);
 });
+
+test("#314 Prefer `eleventy:widths` over `width` attribute", async t => {
+  let elev = new Eleventy( "test", "test/_site", {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("virtual.html", `<img src="./bio-2017.jpg" alt="My ugly mug" eleventy:widths="100" width="200">`);
+
+      eleventyConfig.addPlugin(eleventyImageTransformPlugin, {
+        dryRun: true, // don’t write image files!
+      });
+    }
+  });
+  elev.disableLogger();
+
+  let results = await elev.toJSON();
+  t.is(results[0].content, `<picture><source type="image/webp" srcset="/virtual/KkPMmHd3hP-100.webp"><img src="/virtual/KkPMmHd3hP-100.jpeg" alt="My ugly mug" width="100" height="66"></picture>`);
+});
+
+test("#306 `eleventy:sizes` overrides `sizes` default from config", async t => {
+  let elev = new Eleventy( "test", "test/_site", {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("virtual.html", `<img src="./bio-2017.jpg" alt="My ugly mug" eleventy:widths="100,200" eleventy:sizes="(max-width: 599px) 100vw, 600px">`);
+
+      eleventyConfig.addPlugin(eleventyImageTransformPlugin, {
+        dryRun: true, // don’t write image files!
+
+        defaultAttributes: {
+          sizes: "(max-width: 1024px) 100vw, 1600px",
+        }
+      });
+    }
+  });
+  elev.disableLogger();
+
+  let results = await elev.toJSON();
+  t.is(results[0].content, `<picture><source type="image/webp" srcset="/virtual/KkPMmHd3hP-100.webp 100w, /virtual/KkPMmHd3hP-200.webp 200w" sizes="(max-width: 599px) 100vw, 600px"><img src="/virtual/KkPMmHd3hP-100.jpeg" alt="My ugly mug" width="200" height="133" srcset="/virtual/KkPMmHd3hP-100.jpeg 100w, /virtual/KkPMmHd3hP-200.jpeg 200w" sizes="(max-width: 599px) 100vw, 600px"></picture>`);
+});
+
+test("#306 `eleventy:sizes` overrides `sizes` attribute", async t => {
+  let elev = new Eleventy( "test", "test/_site", {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("virtual.html", `<img src="./bio-2017.jpg" alt="My ugly mug" eleventy:widths="100,200" sizes="(max-width: 1024px) 100vw, 1600px" eleventy:sizes="(max-width: 599px) 100vw, 600px">`);
+
+      eleventyConfig.addPlugin(eleventyImageTransformPlugin, {
+        dryRun: true, // don’t write image files!
+      });
+    }
+  });
+  elev.disableLogger();
+
+  let results = await elev.toJSON();
+  t.is(results[0].content, `<picture><source type="image/webp" srcset="/virtual/KkPMmHd3hP-100.webp 100w, /virtual/KkPMmHd3hP-200.webp 200w" sizes="(max-width: 599px) 100vw, 600px"><img src="/virtual/KkPMmHd3hP-100.jpeg" alt="My ugly mug" width="200" height="133" srcset="/virtual/KkPMmHd3hP-100.jpeg 100w, /virtual/KkPMmHd3hP-200.jpeg 200w" sizes="(max-width: 599px) 100vw, 600px"></picture>`);
+});
+
+test("#306 `sizes` attribute overrides `sizes` default from config", async t => {
+  let elev = new Eleventy( "test", "test/_site", {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("virtual.html", `<img src="./bio-2017.jpg" alt="My ugly mug" eleventy:widths="100,200" sizes="(max-width: 599px) 100vw, 600px">`);
+
+      eleventyConfig.addPlugin(eleventyImageTransformPlugin, {
+        dryRun: true, // don’t write image files!
+
+        defaultAttributes: {
+          sizes: "(max-width: 1024px) 100vw, 1600px",
+        }
+      });
+    }
+  });
+  elev.disableLogger();
+
+  let results = await elev.toJSON();
+  t.is(results[0].content, `<picture><source type="image/webp" srcset="/virtual/KkPMmHd3hP-100.webp 100w, /virtual/KkPMmHd3hP-200.webp 200w" sizes="(max-width: 599px) 100vw, 600px"><img src="/virtual/KkPMmHd3hP-100.jpeg" alt="My ugly mug" width="200" height="133" srcset="/virtual/KkPMmHd3hP-100.jpeg 100w, /virtual/KkPMmHd3hP-200.jpeg 200w" sizes="(max-width: 599px) 100vw, 600px"></picture>`);
+});
+
 
 test("#236 Use with permalink with file name", async t => {
   let elev = new Eleventy( "test", "test/_site", {
@@ -515,5 +588,21 @@ test("Using imgAttributes/pictureAttributes alongside defaultAttributes (removin
   });
 
   let results = await elev.toJSON();
-  t.is(results[0].content, `<picture class="outer"><source type="image/webp" srcset="/virtual/KkPMmHd3hP-1280.webp 1280w"><img class="inner" src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" width="1280" height="853"></picture>`);
+  t.is(results[0].content, `<picture class="outer"><source type="image/webp" srcset="/virtual/KkPMmHd3hP-1280.webp"><img class="inner" src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" width="1280" height="853"></picture>`);
+});
+
+test("#276 Strip eleventy:ignore attribute from img elements inside picture elements", async t => {
+  let elev = new Eleventy( "test", "test/_site", {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("virtual.html", `<picture><img eleventy:ignore src="./bio-2017.jpg" alt="My ugly mug"></picture>`);
+
+      eleventyConfig.addPlugin(eleventyImageTransformPlugin, {
+        dryRun: true, // don’t write image files!
+      });
+    }
+  });
+  elev.disableLogger();
+
+  let results = await elev.toJSON();
+  t.is(results[0].content, `<picture><img src="./bio-2017.jpg" alt="My ugly mug"></picture>`);
 });

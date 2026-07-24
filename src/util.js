@@ -1,4 +1,5 @@
 import path from "node:path";
+import { decodeHTMLAttribute } from "entities";
 
 export default class Util {
   static KEYS = {
@@ -17,7 +18,7 @@ export default class Util {
     return obj;
   }
 
-  // Temporary alias for changes made in https://github.com/11ty/eleventy-img/pull/138
+  // Temporary alias for changes made in https://github.com/11ty/image/pull/138
   static isFullUrl(url) {
     return this.isRemoteUrl(url);
   }
@@ -48,6 +49,10 @@ export default class Util {
     }
 
     if(isViaHtml) {
+      // This reference came from HTML, so decode HTML entities in the attribute
+      // value (e.g. `rose&amp;rose.jpg` => `rose&rose.jpg`) before resolving the
+      // path, mirroring how a browser reads the attribute. See #307.
+      src = decodeHTMLAttribute(src);
       src = decodeURIComponent(src);
     }
 

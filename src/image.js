@@ -82,6 +82,12 @@ export default class Image {
     }
 
     if(this.isRemoteUrl) {
+      // SSRF protection: block requests to private/internal IP ranges
+      const { hostname } = new URL(src);
+      if (/^(localhost|.*\.local)$/.test(hostname) || hostname === "::1" || /^(127\.|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.)/.test(hostname)) {
+        throw new Error(`[eleventy-img] Fetching from private/internal network addresses is not allowed: ${hostname}`);
+      }
+
       this.cacheOptions = Object.assign({
         type: "buffer",
         // deprecated in Eleventy Image, but we already prefer this.cacheOptions.duration automatically

@@ -9,7 +9,7 @@ test("Image markup (defaults)", async t => {
 
   t.is(generateHTML(results, {
     alt: ""
-  }), `<picture><source type="image/webp" srcset="/img/KkPMmHd3hP-1280.webp 1280w"><img src="/img/KkPMmHd3hP-1280.jpeg" alt="" width="1280" height="853"></picture>`);
+  }), `<picture><source type="image/webp" srcset="/img/KkPMmHd3hP-1280.webp"><img src="/img/KkPMmHd3hP-1280.jpeg" alt="" width="1280" height="853"></picture>`);
 });
 
 test("Image file with diacritics #253", async t => {
@@ -19,7 +19,7 @@ test("Image file with diacritics #253", async t => {
 
   t.is(generateHTML(results, {
     alt: ""
-  }), `<picture><source type="image/webp" srcset="/img/KkPMmHd3hP-1280.webp 1280w"><img src="/img/KkPMmHd3hP-1280.jpeg" alt="" width="1280" height="853"></picture>`);
+  }), `<picture><source type="image/webp" srcset="/img/KkPMmHd3hP-1280.webp"><img src="/img/KkPMmHd3hP-1280.jpeg" alt="" width="1280" height="853"></picture>`);
 });
 
 test("Image service", async t => {
@@ -56,7 +56,7 @@ test("Image object (defaults)", async t => {
         {
           "source": {
             type: "image/webp",
-            srcset: "/img/KkPMmHd3hP-1280.webp 1280w",
+            srcset: "/img/KkPMmHd3hP-1280.webp",
           }
         },
         {
@@ -106,7 +106,7 @@ test("Image markup (two formats)", async t => {
 
   t.is(generateHTML(results, {
     alt: ""
-  }), `<picture><source type="image/avif" srcset="/img/KkPMmHd3hP-1280.avif 1280w"><img src="/img/KkPMmHd3hP-1280.webp" alt="" width="1280" height="853"></picture>`);
+  }), `<picture><source type="image/avif" srcset="/img/KkPMmHd3hP-1280.avif"><img src="/img/KkPMmHd3hP-1280.webp" alt="" width="1280" height="853"></picture>`);
 });
 
 test("Image markup (one format)", async t => {
@@ -205,6 +205,40 @@ test("#207 Uses sizes=auto as fallback when loading=lazy to avoid error message"
   t.is(html, '<picture><source type="image/webp" srcset="/img/KkPMmHd3hP-100.webp 100w, /img/KkPMmHd3hP-200.webp 200w" sizes="auto"><img alt="" loading="lazy" src="/img/KkPMmHd3hP-100.jpeg" width="200" height="133" srcset="/img/KkPMmHd3hP-100.jpeg 100w, /img/KkPMmHd3hP-200.jpeg 200w" sizes="auto"></picture>');
 });
 
+test("#298 Single width across multiple formats: no sizes=auto even when loading=lazy (single candidate, no `w` descriptor)", async t => {
+  let html = await eleventyImage("./test/bio-2017.jpg", {
+    dryRun: true,
+    widths: [200],
+    returnType: "html",
+    htmlOptions: {
+      imgAttributes: {
+        alt: "",
+        loading: "lazy"
+      }
+    }
+  });
+
+  // Single-candidate <source> srcset drops the `w` descriptor, so no `sizes` is added (not even "auto").
+  t.is(html, '<picture><source type="image/webp" srcset="/img/KkPMmHd3hP-200.webp"><img alt="" loading="lazy" src="/img/KkPMmHd3hP-200.jpeg" width="200" height="133"></picture>');
+});
+
+test("#298 Single width across multiple formats drops the `w` descriptor (no sizes needed)", async t => {
+  let html = await eleventyImage("./test/bio-2017.jpg", {
+    dryRun: true,
+    widths: [200],
+    formats: ["webp", "jpeg"],
+    returnType: "html",
+    htmlOptions: {
+      imgAttributes: {
+        alt: ""
+      }
+    }
+  });
+
+  // A single-candidate srcset needs no `w` descriptor, so no `sizes` is required and none is thrown.
+  t.is(html, '<picture><source type="image/webp" srcset="/img/KkPMmHd3hP-200.webp"><img alt="" src="/img/KkPMmHd3hP-200.jpeg" width="200" height="133"></picture>');
+});
+
 test("Image markup (defaults, inlined)", async t => {
   let results = await eleventyImage("./test/bio-2017.jpg", {
     dryRun: true
@@ -215,7 +249,7 @@ test("Image markup (defaults, inlined)", async t => {
   }, {
     whitespaceMode: "block"
   }), `<picture>
-  <source type="image/webp" srcset="/img/KkPMmHd3hP-1280.webp 1280w">
+  <source type="image/webp" srcset="/img/KkPMmHd3hP-1280.webp">
   <img src="/img/KkPMmHd3hP-1280.jpeg" alt="" width="1280" height="853">
 </picture>`);
 });
@@ -313,7 +347,7 @@ test("Image markup (animated gif, two formats)", async t => {
 
   t.is(generateHTML(results, {
     alt: ""
-  }), `<picture><source type="image/webp" srcset="/img/YQVTYq1wRQ-400.webp 400w"><img src="/img/YQVTYq1wRQ-400.gif" alt="" width="400" height="400"></picture>`);
+  }), `<picture><source type="image/webp" srcset="/img/YQVTYq1wRQ-400.webp"><img src="/img/YQVTYq1wRQ-400.gif" alt="" width="400" height="400"></picture>`);
 });
 
 test("Image markup (two formats, neither priority defined)", async t => {
@@ -381,7 +415,7 @@ test("Issue #177", t => {
     class: 'w-full h-full object-cover',
   };
 
-  t.is(eleventyImage.generateHTML(metadata, imageAttributes), `<picture><source type="image/avif" srcset="/img/8u6v7oPGyC-160.avif 160w" sizes="(max-width: 0px) 100vw"><img alt="" loading="lazy" decoding="async" fetchPriority="high" class="w-full h-full object-cover" src="/img/8u6v7oPGyC-160.jpeg" width="160" height="160"></picture>`);
+  t.is(eleventyImage.generateHTML(metadata, imageAttributes), `<picture><source type="image/avif" srcset="/img/8u6v7oPGyC-160.avif" sizes="(max-width: 0px) 100vw"><img alt="" loading="lazy" decoding="async" fetchPriority="high" class="w-full h-full object-cover" src="/img/8u6v7oPGyC-160.jpeg" width="160" height="160"></picture>`);
 });
 
 test("Image markup with smallest fallback dimensions", async t => {
@@ -434,7 +468,7 @@ test("returnType: html to <picture>", async t => {
     },
   });
 
-  t.is(html, `<picture class="outer"><source type="image/webp" srcset="/img/KkPMmHd3hP-1280.webp 1280w"><img alt="" class="inner" src="/img/KkPMmHd3hP-1280.jpeg" width="1280" height="853"></picture>`);
+  t.is(html, `<picture class="outer"><source type="image/webp" srcset="/img/KkPMmHd3hP-1280.webp"><img alt="" class="inner" src="/img/KkPMmHd3hP-1280.jpeg" width="1280" height="853"></picture>`);
 });
 
 test("#239 full urls in urlPath", async t => {

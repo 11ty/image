@@ -1,6 +1,5 @@
 import fs, { promises as fsp } from "node:fs";
 import path from "node:path";
-import getImageSize from "image-size";
 import debugUtil from "debug";
 
 import { createHashSync } from "@11ty/eleventy-utils";
@@ -535,7 +534,7 @@ export default class Image {
 
     for(let outputFormat of outputFormats) {
       if(!outputFormat || outputFormat === "auto") {
-        throw new Error("When using statsSync or statsByDimensionsSync, `formats: [null | 'auto']` to use the native image format is not supported.");
+        throw new Error("When using `statsOnly` with `imageMetadataOverride` (guessed dimensions without a known source format), `formats: [null | 'auto']` to use the native image format is not supported.");
       }
 
       if(outputFormat === "svg") {
@@ -599,7 +598,7 @@ export default class Image {
   }
 
   static getAspectRatioHeight(originalDimensions, newWidth) {
-    // Warning: if this is a guess via statsByDimensionsSync and that guess is wrong
+    // Warning: if this is a guess via `imageMetadataOverride` and that guess is wrong
     // The aspect ratio will be wrong and any height/widths returned will be wrong!
     return Math.floor(newWidth * originalDimensions.height / originalDimensions.width);
   }
@@ -793,34 +792,35 @@ export default class Image {
       return;
     }
 
+    // Supply known dimensions to skip reading the image entirely (works for both
+    // local and remote sources). `imageMetadataOverride` is the current option;
+    // `remoteImageMetadata` is a deprecated alias kept for backwards compatibility.
+    let metadataOverride = this.rawOptions.imageMetadataOverride || this.rawOptions.remoteImageMetadata;
+    if(metadataOverride?.width && metadataOverride?.height) {
+      return this.getFullStats({
+        width: metadataOverride.width,
+        height: metadataOverride.height,
+        format: metadataOverride.format, // only required if you want to use the "auto" format
+        guess: true,
+      });
+    }
+
     let input;
     if(Util.isRemoteUrl(this.src)) {
-      if(this.rawOptions.remoteImageMetadata?.width && this.rawOptions.remoteImageMetadata?.height) {
-        return this.getFullStats({
-          width: this.rawOptions.remoteImageMetadata.width,
-          height: this.rawOptions.remoteImageMetadata.height,
-          format: this.rawOptions.remoteImageMetadata.format, // only required if you want to use the "auto" format
-          guess: true,
-        });
-      }
-
       // Fetch remote image to operate on it
-      // `remoteImageMetadata` is no longer required for statsOnly on remote images
+      // an `imageMetadataOverride` is no longer required for statsOnly on remote images
       input = await this.getInput();
     }
 
     // Local images
     try {
+      // Uses sharp to read dimensions/format, consistent with the main pipeline.
       // Related to https://github.com/11ty/eleventy-img/issues/295
-      let { width, height, type } = getImageSize(input || this.src);
+      let metadata = await sharp(input || this.src).metadata();
 
-      return this.getFullStats({
-        width,
-        height,
-        format: type // only required if you want to use the "auto" format
-      });
+      return this.getFullStats(metadata);
     } catch(e) {
-      throw new Error(`Eleventy Image error (statsOnly): \`image-size\` on "${this.src}" failed. Original error: ${e.message}`, {
+      throw new Error(`Eleventy Image error (statsOnly): reading image metadata on "${this.src}" failed. Original error: ${e.message}`, {
         cause: e
       });
     }
@@ -881,50 +881,25 @@ export default class Image {
     return img;
   }
 
-  /* `statsSync` doesn’t generate any files, but will tell you where
-  * the asynchronously generated files will end up! This is useful
-  * in synchronous-only template environments where you need the
-  * image URLs synchronously but can’t rely on the files being in
-  * the correct location yet.
-  *
-  * `options.dryRun` is still asynchronous but also doesn’t generate
-  * any files.
+  static SYNC_ERROR_MESSAGE = "For synchronous-only template contexts (Handlebars, older Nunjucks), use the HTML Transform (post-processing) method instead: https://www.11ty.dev/docs/plugins/image/#html-transform. See https://github.com/11ty/eleventy-img/issues/211";
+
+  /* The synchronous `stats*` methods were removed in Eleventy Image v7.0.0.
+  * See https://github.com/11ty/eleventy-img/issues/211
   */
   statsSync() {
-    if(this.isRemoteUrl) {
-      throw new Error("`statsSync` is not supported with remote sources. Use `statsByDimensionsSync(src, width, height, options)` instead.");
-    }
-
-    let dimensions = getImageSize(this.src);
-
-    return this.getFullStats({
-      width: dimensions.width,
-      height: dimensions.height,
-      format: dimensions.type,
-    });
+    throw new Error("`statsSync` was removed in Eleventy Image v7.0.0. Use the asynchronous API instead: `await Image(src, { statsOnly: true, /* …options */ })`. " + Image.SYNC_ERROR_MESSAGE);
   }
 
-  static statsSync(src, opts) {
-    if(typeof src === "string" && Util.isRemoteUrl(src)) {
-      throw new Error("`statsSync` is not supported with remote sources. Use `statsByDimensionsSync(src, width, height, options)` instead.");
-    }
-
-    let img = Image.create(src, opts);
-    return img.statsSync();
+  static statsSync() {
+    throw new Error("`statsSync` was removed in Eleventy Image v7.0.0. Use the asynchronous API instead: `await Image(src, { statsOnly: true, /* …options */ })`. " + this.SYNC_ERROR_MESSAGE);
   }
 
-  statsByDimensionsSync(width, height) {
-    let dimensions = {
-      width,
-      height,
-      guess: true
-    };
-    return this.getFullStats(dimensions);
+  statsByDimensionsSync() {
+    throw new Error("`statsByDimensionsSync` was removed in Eleventy Image v7.0.0. Use the asynchronous API instead: `await Image(src, { statsOnly: true, imageMetadataOverride: { width, height /*, format */ } })`. " + Image.SYNC_ERROR_MESSAGE);
   }
 
-  static statsByDimensionsSync(src, width, height, opts) {
-    let img = Image.create(src, opts);
-    return img.statsByDimensionsSync(width, height);
+  static statsByDimensionsSync() {
+    throw new Error("`statsByDimensionsSync` was removed in Eleventy Image v7.0.0. Use the asynchronous API instead: `await Image(src, { statsOnly: true, imageMetadataOverride: { width, height /*, format */ } })`. " + this.SYNC_ERROR_MESSAGE);
   }
 }
 

@@ -111,8 +111,13 @@ Object.defineProperty(queueImage, "concurrency", {
 
 // Support default export and named exports for backwards compat
 import { default as ImagePath } from "./src/image-path.js";
-import { default as ImageSize } from "image-size";
 import { generateHTML, generateObject } from "./src/generate-html.js";
+
+// The `image-size` dependency (re-exported as `ImageSize`) was removed in
+// Eleventy Image v7.0.0. This stub throws an actionable upgrade error.
+function ImageSize() {
+  throw new Error("The `ImageSize` export (a re-export of the `image-size` package) was removed in Eleventy Image v7.0.0. Read image dimensions with sharp’s `metadata()` or use the asynchronous `statsOnly` API instead. See https://github.com/11ty/eleventy-img/issues/295");
+}
 
 export {
   Util,

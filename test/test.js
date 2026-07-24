@@ -54,20 +54,61 @@ test("getFormats removes duplicates", t => {
   t.is(formats[2], "png");
 });
 
-test("Sync with jpeg input", t => {
-  let stats = eleventyImage.statsSync("./test/bio-2017.jpg");
+test("statsSync throws with an upgrade path (#211)", t => {
+  let err = t.throws(() => eleventyImage.statsSync("./test/bio-2017.jpg"));
+  t.true(err.message.includes("statsOnly"));
+  t.true(err.message.includes("v7.0.0"));
+  t.true(err.message.includes("#html-transform"));
+});
+
+test("statsByDimensionsSync throws with an upgrade path (#211)", t => {
+  let err = t.throws(() => eleventyImage.statsByDimensionsSync("./test/bio-2017.jpg", 1280, 853));
+  t.true(err.message.includes("imageMetadataOverride"));
+  t.true(err.message.includes("v7.0.0"));
+  t.true(err.message.includes("#html-transform"));
+});
+
+test("statsOnly with imageMetadataOverride on a local image (skips reading the file)", async t => {
+  // Supplied dimensions differ from the real image (1280x853) and are used as-is,
+  // proving the file is not read. Formerly `statsByDimensionsSync` for local paths.
+  let stats = await eleventyImage("./test/bio-2017.jpg", {
+    statsOnly: true,
+    imageMetadataOverride: { width: 164, height: 164 },
+    widths: [164, 328],
+    formats: ["jpeg"],
+  });
+
+  // won’t upscale past the supplied width
+  t.is(stats.jpeg.length, 1);
+  t.is(stats.jpeg[0].width, 164);
+  t.is(stats.jpeg[0].height, 164);
+  t.is(stats.jpeg[0].outputPath, path.join("img/KkPMmHd3hP-164.jpeg"));
+});
+
+test("statsOnly still supports the deprecated remoteImageMetadata alias", async t => {
+  let stats = await eleventyImage("./test/bio-2017.jpg", {
+    statsOnly: true,
+    remoteImageMetadata: { width: 164, height: 164 },
+    widths: [164, 328],
+    formats: ["jpeg"],
+  });
+
+  t.is(stats.jpeg.length, 1);
+  t.is(stats.jpeg[0].width, 164);
+  t.is(stats.jpeg[0].height, 164);
+});
+
+test("statsOnly with jpeg input", async t => {
+  let stats = await eleventyImage("./test/bio-2017.jpg", {
+    statsOnly: true,
+  });
   t.is(stats.webp.length, 1);
   t.is(stats.jpeg.length, 1);
 });
 
-test("Sync by dimension with jpeg input", t => {
-  let stats = eleventyImage.statsByDimensionsSync("./test/bio-2017.jpg", 1280, 853);
-  t.is(stats.webp.length, 1);
-  t.is(stats.jpeg.length, 1);
-});
-
-test("Sync with widths", t => {
-  let stats = eleventyImage.statsSync("./test/bio-2017.jpg", {
+test("statsOnly with widths", async t => {
+  let stats = await eleventyImage("./test/bio-2017.jpg", {
+    statsOnly: true,
     widths: [300]
   });
   t.is(stats.webp.length, 1);
@@ -76,19 +117,9 @@ test("Sync with widths", t => {
   t.is(stats.jpeg[0].width, 300);
 });
 
-test("Sync by dimension with widths", t => {
-  let stats = eleventyImage.statsByDimensionsSync("./test/bio-2017.jpg", 1280, 853, {
-    widths: [300]
-  });
-  t.is(stats.webp.length, 1);
-  t.is(stats.webp[0].width, 300);
-  t.is(stats.jpeg.length, 1);
-  t.is(stats.jpeg[0].width, 300);
-});
-
-
-test("Sync with two widths", t => {
-  let stats = eleventyImage.statsSync("./test/bio-2017.jpg", {
+test("statsOnly with two widths", async t => {
+  let stats = await eleventyImage("./test/bio-2017.jpg", {
+    statsOnly: true,
     widths: [300, 500]
   });
   t.is(stats.webp.length, 2);
@@ -99,21 +130,9 @@ test("Sync with two widths", t => {
   t.is(stats.jpeg[1].width, 500);
 });
 
-test("Sync by dimension with two widths", t => {
-  let stats = eleventyImage.statsByDimensionsSync("./test/bio-2017.jpg", 1280, 853, {
-    widths: [300, 500]
-  });
-  t.is(stats.webp.length, 2);
-  t.is(stats.webp[0].width, 300);
-  t.is(stats.webp[1].width, 500);
-  t.is(stats.jpeg.length, 2);
-  t.is(stats.jpeg[0].width, 300);
-  t.is(stats.jpeg[1].width, 500);
-});
-
-
-test("Sync with null width", t => {
-  let stats = eleventyImage.statsSync("./test/bio-2017.jpg", {
+test("statsOnly with null width", async t => {
+  let stats = await eleventyImage("./test/bio-2017.jpg", {
+    statsOnly: true,
     widths: [300, null]
   });
   t.is(stats.webp.length, 2);
@@ -128,40 +147,9 @@ test("Sync with null width", t => {
   t.is(stats.jpeg[1].height, 853);
 });
 
-test("Sync with 'auto' width", t => {
-  let stats = eleventyImage.statsSync("./test/bio-2017.jpg", {
-    widths: [300, 'auto']
-  });
-  t.is(stats.webp.length, 2);
-  t.is(stats.webp[0].width, 300);
-  t.is(stats.webp[0].height, 199);
-  t.is(stats.webp[1].width, 1280);
-  t.is(stats.webp[1].height, 853);
-  t.is(stats.jpeg.length, 2);
-  t.is(stats.jpeg[0].width, 300);
-  t.is(stats.jpeg[0].height, 199);
-  t.is(stats.jpeg[1].width, 1280);
-  t.is(stats.jpeg[1].height, 853);
-});
-
-test("Sync by dimension with null width", t => {
-  let stats = eleventyImage.statsByDimensionsSync("./test/bio-2017.jpg", 1280, 853, {
-    widths: [300, null]
-  });
-  t.is(stats.webp.length, 2);
-  t.is(stats.webp[0].width, 300);
-  t.is(stats.webp[0].height, 199);
-  t.is(stats.webp[1].width, 1280);
-  t.is(stats.webp[1].height, 853);
-  t.is(stats.jpeg.length, 2);
-  t.is(stats.jpeg[0].width, 300);
-  t.is(stats.jpeg[0].height, 199);
-  t.is(stats.jpeg[1].width, 1280);
-  t.is(stats.jpeg[1].height, 853);
-});
-
-test("Sync by dimension with 'auto' width", t => {
-  let stats = eleventyImage.statsByDimensionsSync("./test/bio-2017.jpg", 1280, 853, {
+test("statsOnly with 'auto' width", async t => {
+  let stats = await eleventyImage("./test/bio-2017.jpg", {
+    statsOnly: true,
     widths: [300, 'auto']
   });
   t.is(stats.webp.length, 2);
@@ -312,8 +300,9 @@ test("Use exact same width as original", async t => {
   t.is(stats.jpeg[0].width, 1280);
 });
 
-test("Try to use a width larger than original (statsSync)", t => {
-  let stats = eleventyImage.statsSync("./test/bio-2017.jpg", {
+test("Try to use a width larger than original (statsOnly)", async t => {
+  let stats = await eleventyImage("./test/bio-2017.jpg", {
+    statsOnly: true,
     widths: [1500],
     formats: ["jpeg"]
   });
@@ -323,8 +312,9 @@ test("Try to use a width larger than original (statsSync)", t => {
   t.is(stats.jpeg[0].width, 1280);
 });
 
-test("Use exact same width as original (statsSync)", t => {
-  let stats = eleventyImage.statsSync("./test/bio-2017.jpg", {
+test("Use exact same width as original (statsOnly)", async t => {
+  let stats = await eleventyImage("./test/bio-2017.jpg", {
+    statsOnly: true,
     widths: [1280],
     formats: ["jpeg"]
   });
@@ -362,10 +352,11 @@ test("Use custom function to define file names", async (t) => {
   t.is(stats.jpeg[1].width, 1280);
 });
 
-test("Unavatar test", t => {
-  let stats = eleventyImage.statsByDimensionsSync("https://unavatar.now.sh/twitter/zachleat?fallback=false", 400, 400, {
+test("Unavatar test", async t => {
+  let stats = await eleventyImage("https://unavatar.now.sh/twitter/zachleat?fallback=false", {
+    statsOnly: true,
+    imageMetadataOverride: { width: 400, height: 400 },
     widths: [75],
-    remoteAssetContent: 'remote asset content'
   });
 
   t.is(stats.webp.length, 1);
@@ -477,28 +468,6 @@ test("getWidths allow upscaling", t => {
   t.deepEqual(eleventyImage.getWidths(300, [null, 150], true), [150,300]);
   t.deepEqual(eleventyImage.getWidths(300, [150, 'auto'], true), [150,300]);
   t.deepEqual(eleventyImage.getWidths(300, ['auto', 150], true), [150,300]);
-});
-
-test("Sync by dimension with jpeg input (wrong dimensions, supplied are smaller than real)", t => {
-  let stats = eleventyImage.statsByDimensionsSync("./test/bio-2017.jpg", 164, 164, {
-    widths: [164, 328],
-    formats: ["jpeg"],
-  });
-
-  // this won’t upscale so it will miss out on higher resolution images but there won’t be any broken image URLs in the output
-  t.is(stats.jpeg.length, 1);
-  t.is(stats.jpeg[0].outputPath, path.join("img/KkPMmHd3hP-164.jpeg"));
-});
-
-test("Sync by dimension with jpeg input (wrong dimensions, supplied are larger than real)", t => {
-  let stats = eleventyImage.statsByDimensionsSync("./test/bio-2017.jpg", 1500, 1500, {
-    widths: [164, 328],
-    formats: ["jpeg"],
-  });
-
-  t.is(stats.jpeg.length, 2);
-  t.is(stats.jpeg[0].outputPath, path.join("img/KkPMmHd3hP-164.jpeg"));
-  t.is(stats.jpeg[1].outputPath, path.join("img/KkPMmHd3hP-328.jpeg"));
 });
 
 test("Keep a cache, reuse with same file names and options", async t => {
@@ -724,12 +693,14 @@ test("normalizeImageSource decodes HTML entities in an HTML `src` #307", t => {
   t.is(Util.normalizeImageSource({ input: "src", inputPath: "src/index.html" }, "rose&rose.jpg"), path.join("src", "rose&rose.jpg"));
 });
 
-test("widths array should be ignored in hashing", t => {
-  let stats = eleventyImage.statsSync("./test/bio-2017.jpg", {
+test("widths array should be ignored in hashing", async t => {
+  let stats = await eleventyImage("./test/bio-2017.jpg", {
+    statsOnly: true,
     widths: [1280]
   });
 
-  let stats2 = eleventyImage.statsSync("./test/bio-2017.jpg", {
+  let stats2 = await eleventyImage("./test/bio-2017.jpg", {
+    statsOnly: true,
     widths: [300, 600]
   });
 
@@ -738,12 +709,9 @@ test("widths array should be ignored in hashing", t => {
   t.is(stats2.jpeg[1].url, "/img/KkPMmHd3hP-600.jpeg");
 });
 
-test("statsSync and eleventyImage output comparison", async t => {
-  let statsSync = eleventyImage.statsSync("./test/bio-2017.jpg", {
-    widths: [399],
-    formats: ["jpeg"]
-  });
-  let statsByDimensionsSync = eleventyImage.statsByDimensionsSync("./test/bio-2017.jpg", 1280, 853, {
+test("statsOnly and eleventyImage output comparison", async t => {
+  let statsOnly = await eleventyImage("./test/bio-2017.jpg", {
+    statsOnly: true,
     widths: [399],
     formats: ["jpeg"]
   });
@@ -753,13 +721,11 @@ test("statsSync and eleventyImage output comparison", async t => {
     dryRun: true
   });
 
-  // these aren’t expected in the statsSync method
+  // these aren’t expected in the statsOnly output
   delete stats.jpeg[0].buffer;
   delete stats.jpeg[0].size;
 
-  t.deepEqual(statsSync, stats);
-  t.deepEqual(statsByDimensionsSync, stats);
-  t.deepEqual(statsSync, statsByDimensionsSync);
+  t.deepEqual(statsOnly, stats);
 });
 
 test("urlFormat using local image", async t => {

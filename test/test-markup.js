@@ -30,13 +30,14 @@ test("Image service", async t => {
   let options = {
     formats: ["jpeg"],
     widths: [600], // 260-440 in layout
+    statsOnly: true,
+    imageMetadataOverride: { width: 1440, height: 900 },
     urlFormat: function({ width, format }) {
       return `${serviceApiDomain}/api/image/?url=${encodeURIComponent(screenshotUrl)}&width=${width}&format=${format}`;
     },
-    remoteAssetContent: 'remote asset content'
   };
 
-  let results = eleventyImage.statsByDimensionsSync(screenshotUrl, 1440, 900, options);
+  let results = await eleventyImage(screenshotUrl, options);
 
   t.is(generateHTML(results, {
     alt: "",
@@ -391,7 +392,7 @@ test("Image markup (<picture> with attributes issue #197)", async t => {
     `</picture>`].join(""));
 });
 
-test("Issue #177", t => {
+test("Issue #177", async t => {
   let src = "https://www.zachleat.com/img/avatar-2017.png?q=1";
 
   const options = {
@@ -399,12 +400,14 @@ test("Issue #177", t => {
     formats: ['avif', 'jpeg'],
     outputDir: './_site/img/',
     urlPath: '/img/',
+    statsOnly: true,
+    imageMetadataOverride: { width: 160, height: 160 },
     cacheOptions: {
       duration: '1d',
     },
   };
 
-  let metadata = eleventyImage.statsByDimensionsSync(src, 160, 160, options);
+  let metadata = await eleventyImage(src, options);
 
   const imageAttributes = {
     alt: "",

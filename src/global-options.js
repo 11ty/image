@@ -55,7 +55,10 @@ export const getDefaults = () => ({
   // Useful when used with `urlFormat` above.
   // Better than .statsSync* functions, because this will use the in-memory cache and de-dupe requests. Those will not.
   statsOnly: false,
-  remoteImageMetadata: {}, // For `statsOnly` remote images, this needs to be populated with { width, height, format? }
+  // For `statsOnly`, supply known dimensions to skip reading the image (works for both local and remote sources): { width, height, format? }
+  imageMetadataOverride: {},
+  // @deprecated Use `imageMetadataOverride` instead. Kept as a backwards-compatible alias.
+  remoteImageMetadata: {},
 
   useCache: true, // in-memory and disk cache
   dryRun: false, // Also returns a buffer instance in the return object. Doesn’t write anything to the file system

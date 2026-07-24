@@ -2,7 +2,7 @@ import fs, { promises as fsp } from "node:fs";
 import path from "node:path";
 import debugUtil from "debug";
 
-import { createHashSync } from "@11ty/eleventy-utils";
+import { createHashSync, isPlainObject } from "@11ty/eleventy-utils";
 import { Fetch } from "@11ty/eleventy-fetch";
 
 import sharp from "./adapters/sharp.js";
@@ -414,14 +414,22 @@ export default class Image {
       "sharpWebpOptions",
       "sharpPngOptions",
       "sharpJpegOptions",
-      "sharpAvifOptions"
+      "sharpAvifOptions",
+      "manualCacheKey"
     ].sort();
 
     let hashObject = {};
-    // The code currently assumes are keysToKeep are Object literals (see Util.getSortedObject)
     for(let key of keysToKeep) {
-      if(this.options[key]) {
+      if(this.options[key] === undefined) {
+        continue;
+      }
+
+      // Object literals are sorted for stable hashes (see Util.getSortedObject);
+      // primitives (e.g. a `manualCacheKey` number or string) are passed through as-is.
+      if(isPlainObject(this.options[key])) {
         hashObject[key] = Util.getSortedObject(this.options[key]);
+      } else {
+        hashObject[key] = this.options[key];
       }
     }
 
@@ -684,7 +692,14 @@ export default class Image {
             throw new Error("Expected `function` type in `transform` option. Received: " + transform);
           }
 
-          await transform(sharpInstance);
+          // Only expose the stable, target-resize fields. Other `stat` entries
+          // (url, srcset, filename, outputPath) are computed from the pre-transform
+          // width and would be stale here — `getStat()` is re-run after the transform.
+          await transform(sharpInstance, {
+            width: stat.width,
+            height: stat.height,
+            format: stat.format,
+          });
 
           // Resized in a transform (maybe for a crop)
           let dims = Image.getDimensionsFromSharp(sharpInstance, stat);

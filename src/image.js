@@ -362,6 +362,24 @@ export default class Image {
     return {};
   }
 
+  getSharpResizeOptions(stat, metadata) {
+    let resizeOptions = {
+      ...this.options.sharpResizeOptions,
+    };
+
+    // Eleventy Image owns output dimensions. Allowing these here would make
+    // returned metadata disagree with the output image.
+    delete resizeOptions.width;
+    delete resizeOptions.height;
+    resizeOptions.width = stat.width;
+
+    if(!("withoutEnlargement" in resizeOptions) && (metadata.format !== "svg" || !this.options.svgAllowUpscale)) {
+      resizeOptions.withoutEnlargement = true;
+    }
+
+    return resizeOptions;
+  }
+
   get rawInput() {
     // internal cache
     if(!this.#input) {
@@ -425,21 +443,28 @@ export default class Image {
       "sharpPngOptions",
       "sharpJpegOptions",
       "sharpAvifOptions",
+      "sharpResizeOptions",
       "manualCacheKey"
     ].sort();
 
     let hashObject = {};
     for(let key of keysToKeep) {
-      if(this.options[key] === undefined) {
+      let options = this.options[key];
+
+      if(options === undefined) {
+        continue;
+      }
+
+      if(key === "sharpResizeOptions" && Object.keys(options).length === 0) {
         continue;
       }
 
       // Object literals are sorted for stable hashes (see Util.getSortedObject);
       // primitives (e.g. a `manualCacheKey` number or string) are passed through as-is.
-      if(isPlainObject(this.options[key])) {
-        hashObject[key] = Util.getSortedObject(this.options[key]);
+      if(isPlainObject(options)) {
+        hashObject[key] = Util.getSortedObject(options);
       } else {
-        hashObject[key] = this.options[key];
+        hashObject[key] = options;
       }
     }
 
@@ -789,15 +814,7 @@ export default class Image {
 
         if(!isTransformResize) {
           if(stat.width < sharpMetadata.width || (this.options.svgAllowUpscale && sharpMetadata.format === "svg")) {
-            let resizeOptions = {
-              width: stat.width
-            };
-
-            if(sharpMetadata.format !== "svg" || !this.options.svgAllowUpscale) {
-              resizeOptions.withoutEnlargement = true;
-            }
-
-            sharpInstance.resize(resizeOptions);
+            sharpInstance.resize(this.getSharpResizeOptions(stat, sharpMetadata));
           }
         }
 

@@ -325,7 +325,7 @@ export default class Image {
 
   #finalizeResults(results = {}) {
     // used when results are passed to generate HTML, we maintain some internal metadata about the options used.
-    let imgAttributes = this.options.htmlOptions?.imgAttributes || {};
+    let imgAttributes = Object.assign({}, this.options.htmlOptions?.imgAttributes);
     imgAttributes.src = this.src;
 
     Object.defineProperty(results, "eleventyImage", {

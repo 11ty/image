@@ -45,7 +45,7 @@
     "entities": "^8.0.0",
     "obug": "^2.1.4",
     "p-queue": "^9.3.3",
-    "sharp": "^0.35.3"
+    "sharp": "^0.35.5"
   },
   "devDependencies": {
     "@11ty/eleventy": "^4.0.0-alpha.10",

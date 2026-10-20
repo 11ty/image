@@ -39,6 +39,26 @@ export default class Util {
     }
   }
 
+  static isDataUri(src) {
+    return typeof src === "string" && /^data:/i.test(src);
+  }
+
+  // Decodes the payload of a `data:` URI into a Buffer (#70)
+  static getDataUriBuffer(src) {
+    let commaIndex = src.indexOf(",");
+    if(commaIndex === -1) {
+      throw new Error(`Invalid data URI (missing comma): ${src.slice(0, 50)}…`);
+    }
+
+    let mediaType = src.slice("data:".length, commaIndex).toLowerCase();
+    let payload = src.slice(commaIndex + 1);
+    if(mediaType.split(";").includes("base64")) {
+      return Buffer.from(payload, "base64");
+    }
+
+    return Buffer.from(decodeURIComponent(payload));
+  }
+
   static normalizeImageSource({ input, inputPath }, src, options = {}) {
     let { isViaHtml } = Object.assign({
       isViaHtml: false
@@ -46,6 +66,11 @@ export default class Util {
 
     if(Util.isFullUrl(src)) {
       return src;
+    }
+
+    if(Util.isDataUri(src)) {
+      // Decode HTML entities only, percent-encoding is part of the data URI payload
+      return isViaHtml ? decodeHTMLAttribute(src) : src;
     }
 
     if(isViaHtml) {

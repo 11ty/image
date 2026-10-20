@@ -138,6 +138,7 @@ export function imageTransformPlugin($config, options = {}) {
   options = Object.assign({
     extensions: "html",
     transformOnRequest: process.env.ELEVENTY_RUN_MODE === "serve",
+    transformDataUris: false, // opt-in to process `<img src="data:…">` (#70)
   }, options);
 
   if(options.transformOnRequest !== false) {
@@ -160,7 +161,7 @@ export function imageTransformPlugin($config, options = {}) {
         match.call(pictureNode, { tag: 'img' }, imgNode => {
           imgNode._insideOfPicture = true;
 
-          if(isIgnored(imgNode) || imgNode?.attrs?.src?.startsWith("data:")) {
+          if(isIgnored(imgNode) || !opts.transformDataUris && Util.isDataUri(imgNode?.attrs?.src)) {
             cleanTag(imgNode);
           } else {
             promises.push(transformTag(context, imgNode, pictureNode, opts));
@@ -175,7 +176,7 @@ export function imageTransformPlugin($config, options = {}) {
       tree.match({ tag: 'img' }, (imgNode) => {
         if(imgNode._insideOfPicture) {
           delete imgNode._insideOfPicture;
-        } else if(isIgnored(imgNode) || imgNode?.attrs?.src?.startsWith("data:")) {
+        } else if(isIgnored(imgNode) || !opts.transformDataUris && Util.isDataUri(imgNode?.attrs?.src)) {
           cleanTag(imgNode);
         } else {
           promises.push(transformTag(context, imgNode, imgNode, opts));

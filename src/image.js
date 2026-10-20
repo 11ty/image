@@ -58,12 +58,17 @@ export default class Image {
   #buildLogger;
   #computedHash;
   #directoryManager;
+  #useDataUris = false;
 
   static LOG_PREFIX = "[11ty/image]";
 
   constructor(src, options = {}) {
     if(!src) {
-      throw new Error("`src` is a required argument to the eleventy-img utility (can be a String file path, String URL, or Buffer).");
+      throw new Error("`src` is a required argument to the eleventy-img utility (can be a String file path, String URL, data URI, or Buffer).");
+    }
+
+    if(Util.isDataUri(src)) {
+      src = Util.getDataUriBuffer(src);
     }
 
     this.src = src;
@@ -73,7 +78,11 @@ export default class Image {
     this.options = Object.assign({}, getDefaults(), options);
 
     // Compatible with eleventy-dev-server and Eleventy 3.0.0-alpha.7+ in serve mode.
-    if(this.options.transformOnRequest && !this.options.urlFormat) {
+    if(this.options.transformOnRequest && !this.options.urlFormat && Buffer.isBuffer(src)) {
+      // Buffer sources have no path for the on-request handler, so outputs are inlined as data URIs (#279)
+      this.#useDataUris = true;
+      this.options.dryRun = true;
+    } else if(this.options.transformOnRequest && !this.options.urlFormat) {
       this.options.urlFormat = function({ src, width, format, passthrough }/*, imageOptions*/, options) {
         // Because `format` is actually the *output* format, we need to override  a special case for passthrough.
         if(passthrough) {
@@ -864,7 +873,15 @@ export default class Image {
       }
     }
 
-    return Promise.all(outputFilePromises).then(files => this.#finalizeResults(this.#transformRawFiles(files)));
+    let files = await Promise.all(outputFilePromises);
+    if(this.#useDataUris) {
+      for(let stat of files) {
+        stat.url = `data:${stat.sourceType};base64,${stat.buffer.toString("base64")}`;
+        stat.srcset = `${stat.url} ${stat.width}w`;
+      }
+    }
+
+    return this.#finalizeResults(this.#transformRawFiles(files));
   }
 
   async getStatsOnly() {

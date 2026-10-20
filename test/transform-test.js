@@ -825,3 +825,41 @@ test("#357 Relative image on a page with `.html` stripped from its url via addUr
   t.is(results[0].url, "/items/hiw-10");
   t.is(results[0].content.trim(), `<p><img src="/items/KkPMmHd3hP-1280.jpeg" alt="alt text" width="1280" height="853"></p>`);
 });
+
+test("#70 `transformDataUris: true` transforms data URI images", async t => {
+  let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="70" height="10"><rect width="70" height="10"/></svg>`;
+  let elev = new Eleventy( "test", "test/_site", {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("virtual.html", `<img src="data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}" alt="Box">`);
+
+      eleventyConfig.addPlugin(eleventyImageTransformPlugin, {
+        formats: ["png"],
+        transformDataUris: true,
+        dryRun: true, // don’t write image files!
+      });
+    }
+  });
+  elev.disableLogger();
+
+  let results = await elev.toJSON();
+  t.regex(results[0].content, /^<img src="\/virtual\/[^"]+-70\.png" alt="Box" width="70" height="10">$/);
+});
+
+test("#70 `transformDataUris: true` with a percent-encoded data URI containing HTML entities", async t => {
+  let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="71" height="10"><rect width="71" height="10"/></svg>`;
+  let elev = new Eleventy( "test", "test/_site", {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("virtual.html", `<img src="data:image/svg+xml,${encodeURIComponent(svg).replaceAll("%22", "&quot;")}" alt="Box">`);
+
+      eleventyConfig.addPlugin(eleventyImageTransformPlugin, {
+        formats: ["png"],
+        transformDataUris: true,
+        dryRun: true, // don’t write image files!
+      });
+    }
+  });
+  elev.disableLogger();
+
+  let results = await elev.toJSON();
+  t.regex(results[0].content, /^<img src="\/virtual\/[^"]+-71\.png" alt="Box" width="71" height="10">$/);
+});

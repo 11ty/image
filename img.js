@@ -84,7 +84,7 @@ function createImage(src, opts = {}) {
 
   setupLogger(eleventyConfig, opts);
 
-  if(opts.transformOnRequest) {
+  if(opts.transformOnRequest && !Buffer.isBuffer(img.src)) {
     deferCounter.increment(src);
   }
 

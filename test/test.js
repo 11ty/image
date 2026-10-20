@@ -1511,3 +1511,58 @@ test("#106 Production run should not load the source buffer into memory", async 
 
   t.false(img.hasInputLoaded, "source buffer should not be loaded for production local files");
 });
+
+test("#279 Buffer sources with transformOnRequest use data URIs and write nothing", async t => {
+  let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="279" height="10"><rect width="279" height="10"/></svg>`;
+  let stats = await eleventyImage(Buffer.from(svg), {
+    formats: ["svg", "png"],
+    widths: [100],
+    transformOnRequest: true,
+    outputDir: "./test/img/279/",
+  });
+
+  for(let format of ["svg", "png"]) {
+    let stat = stats[format][0];
+    t.is(stat.url, `data:${stat.sourceType};base64,${stat.buffer.toString("base64")}`);
+    t.is(stat.srcset, `${stat.url} ${stat.width}w`);
+  }
+  t.is(stats.png[0].width, 100);
+  t.false(fs.existsSync("./test/img/279/"));
+});
+
+test("#70 Base64 data URI input", async t => {
+  let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="70" height="10"><rect width="70" height="10"/></svg>`;
+  let stats = await eleventyImage(`data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`, {
+    formats: ["png"],
+    dryRun: true,
+  });
+
+  t.is(stats.png[0].width, 70);
+  t.is(stats.png[0].height, 10);
+});
+
+test("#70 Percent-encoded data URI input", async t => {
+  let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="71" height="10"><rect width="71" height="10"/></svg>`;
+  let stats = await eleventyImage(`data:image/svg+xml,${encodeURIComponent(svg)}`, {
+    formats: ["svg"],
+    dryRun: true,
+  });
+
+  t.is(stats.svg[0].width, 71);
+  t.is(stats.svg[0].buffer.toString(), svg);
+});
+
+test("#70 Raster data URI input", async t => {
+  let jpeg = fs.readFileSync("./test/bio-2017.jpg");
+  let stats = await eleventyImage(`data:image/jpeg;base64,${jpeg.toString("base64")}`, {
+    formats: ["webp"],
+    widths: [70],
+    dryRun: true,
+  });
+
+  t.is(stats.webp[0].width, 70);
+});
+
+test("#70 Invalid data URI input throws", t => {
+  t.throws(() => new Image("data:image/png;base64"), { message: /Invalid data URI/ });
+});

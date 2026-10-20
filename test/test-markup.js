@@ -1,28 +1,29 @@
-import test from "ava";
+import test from "node:test";
+import assert from "node:assert/strict";
 import eleventyImage from "../img.js";
 import { generateHTML, generateObject } from "../src/generate-html.js";
 
-test("Image markup (defaults)", async t => {
+test("Image markup (defaults)", async () => {
   let results = await eleventyImage("./test/bio-2017.jpg", {
     dryRun: true
   });
 
-  t.is(generateHTML(results, {
+  assert.equal(generateHTML(results, {
     alt: ""
   }), `<picture><source type="image/webp" srcset="/img/KkPMmHd3hP-1280.webp"><img src="/img/KkPMmHd3hP-1280.jpeg" alt="" width="1280" height="853"></picture>`);
 });
 
-test("Image file with diacritics #253", async t => {
+test("Image file with diacritics #253", async () => {
   let results = await eleventyImage("./test/les sous titres automatisés de youtube.jpg", {
     dryRun: true
   });
 
-  t.is(generateHTML(results, {
+  assert.equal(generateHTML(results, {
     alt: ""
   }), `<picture><source type="image/webp" srcset="/img/KkPMmHd3hP-1280.webp"><img src="/img/KkPMmHd3hP-1280.jpeg" alt="" width="1280" height="853"></picture>`);
 });
 
-test("Image service", async t => {
+test("Image service", async () => {
   let serviceApiDomain = "https://zachleat.com";
   let siteUrl = "https://heydonworks.com/";
   let screenshotUrl = `${serviceApiDomain}/api/screenshot/?url=${encodeURIComponent(siteUrl)}&js=false`;
@@ -39,17 +40,17 @@ test("Image service", async t => {
 
   let results = await eleventyImage(screenshotUrl, options);
 
-  t.is(generateHTML(results, {
+  assert.equal(generateHTML(results, {
     alt: "",
   }), `<img alt="" src="https://zachleat.com/api/image/?url=https%3A%2F%2Fzachleat.com%2Fapi%2Fscreenshot%2F%3Furl%3Dhttps%253A%252F%252Fheydonworks.com%252F%26js%3Dfalse&width=600&format=jpeg" width="600" height="375">`);
 });
 
-test("Image object (defaults)", async t => {
+test("Image object (defaults)", async () => {
   let results = await eleventyImage("./test/bio-2017.jpg", {
     dryRun: true
   });
 
-  t.deepEqual(generateObject(results, {
+  assert.deepEqual(generateObject(results, {
     alt: ""
   }), {
     "picture": {
@@ -73,13 +74,13 @@ test("Image object (defaults)", async t => {
   });
 });
 
-test("Image markup (two widths)", async t => {
+test("Image markup (two widths)", async () => {
   let results = await eleventyImage("./test/bio-2017.jpg", {
     dryRun: true,
     widths: [200,400]
   });
 
-  t.is(generateHTML(results, {
+  assert.equal(generateHTML(results, {
     alt: "",
     sizes: "100vw",
   }), [`<picture>`,
@@ -88,86 +89,86 @@ test("Image markup (two widths)", async t => {
     `</picture>`].join(""));
 });
 
-test("Image markup (two widths, no sizes—throws an error)", async t => {
+test("Image markup (two widths, no sizes—throws an error)", async () => {
   let results = await eleventyImage("./test/bio-2017.jpg", {
     dryRun: true,
     widths: [200, 400]
   });
 
-  t.throws(() => generateHTML(results, {
+  assert.throws(() => generateHTML(results, {
     alt: "",
   }));
 });
 
-test("Image markup (two formats)", async t => {
+test("Image markup (two formats)", async () => {
   let results = await eleventyImage("./test/bio-2017.jpg", {
     dryRun: true,
     formats: ["avif", "webp"],
   });
 
-  t.is(generateHTML(results, {
+  assert.equal(generateHTML(results, {
     alt: ""
   }), `<picture><source type="image/avif" srcset="/img/KkPMmHd3hP-1280.avif"><img src="/img/KkPMmHd3hP-1280.webp" alt="" width="1280" height="853"></picture>`);
 });
 
-test("Image markup (one format)", async t => {
+test("Image markup (one format)", async () => {
   let results = await eleventyImage("./test/bio-2017.jpg", {
     dryRun: true,
     formats: [null],
   });
 
-  t.is(generateHTML(results, {
+  assert.equal(generateHTML(results, {
     alt: "",
     sizes: "100vw"
   }), `<img src="/img/KkPMmHd3hP-1280.jpeg" alt="" width="1280" height="853">`);
 });
 
-test("Image markup (auto format)", async t => {
+test("Image markup (auto format)", async () => {
   let results = await eleventyImage("./test/bio-2017.jpg", {
     dryRun: true,
     formats: ["auto"],
   });
 
-  t.is(generateHTML(results, {
+  assert.equal(generateHTML(results, {
     alt: "",
     sizes: "100vw"
   }), `<img src="/img/KkPMmHd3hP-1280.jpeg" alt="" width="1280" height="853">`);
 });
 
-test("Image markup (one format, two widths)", async t => {
+test("Image markup (one format, two widths)", async () => {
   let results = await eleventyImage("./test/bio-2017.jpg", {
     dryRun: true,
     formats: [null],
     widths: [100,200],
   });
 
-  t.is(generateHTML(results, {
+  assert.equal(generateHTML(results, {
     alt: "",
     sizes: "100vw"
   }), `<img src="/img/KkPMmHd3hP-100.jpeg" alt="" width="200" height="133" srcset="/img/KkPMmHd3hP-100.jpeg 100w, /img/KkPMmHd3hP-200.jpeg 200w" sizes="100vw">`);
 });
 
-test("Image markup (throws on invalid object)", async t => {
-  t.throws(() => generateHTML({}, { alt: "" }));
-  t.throws(() => generateHTML({ jpeg: [] }, { alt: "" }));
-  t.throws(() => generateHTML({ webp: [], avif: [] }, { alt: "" }));
-  t.notThrows(() => generateHTML({ jpeg: [{}] }, { alt: "" }));
+test("Image markup (throws on invalid object)", async () => {
+  assert.throws(() => generateHTML({}, { alt: "" }));
+  assert.throws(() => generateHTML({ jpeg: [] }, { alt: "" }));
+  assert.throws(() => generateHTML({ webp: [], avif: [] }, { alt: "" }));
+  assert.doesNotThrow(() => generateHTML({ jpeg: [{}] }, { alt: "" }));
 });
 
-test("Image markup (throws on missing alt)", async t => {
+test("Image markup (throws on missing alt)", async () => {
   let results = await eleventyImage("./test/bio-2017.jpg", {
     dryRun: true
   });
 
-  t.throws(() => generateHTML(results, {
+  assert.throws(() => generateHTML(results, {
     src: "./test/bio-2017.jpg"
   }), {
     message: "Missing `alt` attribute on `@11ty/eleventy-img` image optimization from: ./test/bio-2017.jpg"
   });
 });
 
-test("Image markup (throws on missing alt return html)", async t => {
-  await t.throwsAsync(() => eleventyImage("./test/bio-2017.jpg", {
+test("Image markup (throws on missing alt return html)", async () => {
+  await assert.rejects(() => eleventyImage("./test/bio-2017.jpg", {
     dryRun: true,
     returnType: "html"
   }), {
@@ -175,8 +176,8 @@ test("Image markup (throws on missing alt return html)", async t => {
   });
 });
 
-test("Image markup (throws on missing sizes return html)", async t => {
-  await t.throwsAsync(() => eleventyImage("./test/bio-2017.jpg", {
+test("Image markup (throws on missing sizes return html)", async () => {
+  await assert.rejects(() => eleventyImage("./test/bio-2017.jpg", {
     dryRun: true,
     widths: [100,200],
     returnType: "html",
@@ -190,7 +191,7 @@ test("Image markup (throws on missing sizes return html)", async t => {
   });
 });
 
-test("#207 Uses sizes=auto as fallback when loading=lazy to avoid error message", async t => {
+test("#207 Uses sizes=auto as fallback when loading=lazy to avoid error message", async () => {
   let html = await eleventyImage("./test/bio-2017.jpg", {
     dryRun: true,
     widths: [100,200],
@@ -203,10 +204,10 @@ test("#207 Uses sizes=auto as fallback when loading=lazy to avoid error message"
     }
   });
 
-  t.is(html, '<picture><source type="image/webp" srcset="/img/KkPMmHd3hP-100.webp 100w, /img/KkPMmHd3hP-200.webp 200w" sizes="auto"><img alt="" loading="lazy" src="/img/KkPMmHd3hP-100.jpeg" width="200" height="133" srcset="/img/KkPMmHd3hP-100.jpeg 100w, /img/KkPMmHd3hP-200.jpeg 200w" sizes="auto"></picture>');
+  assert.equal(html, '<picture><source type="image/webp" srcset="/img/KkPMmHd3hP-100.webp 100w, /img/KkPMmHd3hP-200.webp 200w" sizes="auto"><img alt="" loading="lazy" src="/img/KkPMmHd3hP-100.jpeg" width="200" height="133" srcset="/img/KkPMmHd3hP-100.jpeg 100w, /img/KkPMmHd3hP-200.jpeg 200w" sizes="auto"></picture>');
 });
 
-test("#298 Single width across multiple formats: no sizes=auto even when loading=lazy (single candidate, no `w` descriptor)", async t => {
+test("#298 Single width across multiple formats: no sizes=auto even when loading=lazy (single candidate, no `w` descriptor)", async () => {
   let html = await eleventyImage("./test/bio-2017.jpg", {
     dryRun: true,
     widths: [200],
@@ -220,10 +221,10 @@ test("#298 Single width across multiple formats: no sizes=auto even when loading
   });
 
   // Single-candidate <source> srcset drops the `w` descriptor, so no `sizes` is added (not even "auto").
-  t.is(html, '<picture><source type="image/webp" srcset="/img/KkPMmHd3hP-200.webp"><img alt="" loading="lazy" src="/img/KkPMmHd3hP-200.jpeg" width="200" height="133"></picture>');
+  assert.equal(html, '<picture><source type="image/webp" srcset="/img/KkPMmHd3hP-200.webp"><img alt="" loading="lazy" src="/img/KkPMmHd3hP-200.jpeg" width="200" height="133"></picture>');
 });
 
-test("#298 Single width across multiple formats drops the `w` descriptor (no sizes needed)", async t => {
+test("#298 Single width across multiple formats drops the `w` descriptor (no sizes needed)", async () => {
   let html = await eleventyImage("./test/bio-2017.jpg", {
     dryRun: true,
     widths: [200],
@@ -237,15 +238,15 @@ test("#298 Single width across multiple formats drops the `w` descriptor (no siz
   });
 
   // A single-candidate srcset needs no `w` descriptor, so no `sizes` is required and none is thrown.
-  t.is(html, '<picture><source type="image/webp" srcset="/img/KkPMmHd3hP-200.webp"><img alt="" src="/img/KkPMmHd3hP-200.jpeg" width="200" height="133"></picture>');
+  assert.equal(html, '<picture><source type="image/webp" srcset="/img/KkPMmHd3hP-200.webp"><img alt="" src="/img/KkPMmHd3hP-200.jpeg" width="200" height="133"></picture>');
 });
 
-test("Image markup (defaults, inlined)", async t => {
+test("Image markup (defaults, inlined)", async () => {
   let results = await eleventyImage("./test/bio-2017.jpg", {
     dryRun: true
   });
 
-  t.is(generateHTML(results, {
+  assert.equal(generateHTML(results, {
     alt: ""
   }, {
     whitespaceMode: "block"
@@ -255,7 +256,7 @@ test("Image markup (defaults, inlined)", async t => {
 </picture>`);
 });
 
-test("svgShortCircuit and generateHTML: Issue #48", async t => {
+test("svgShortCircuit and generateHTML: Issue #48", async () => {
   // let img = new eleventyImage.Image("./test/Ghostscript_Tiger.svg", {
   //   formats: ["webp", "png", "svg"],
   //   svgShortCircuit: true,
@@ -269,18 +270,18 @@ test("svgShortCircuit and generateHTML: Issue #48", async t => {
     svgShortCircuit: true,
     dryRun: true,
   });
-  t.is(stats.svg.length, 1);
-  t.is(stats.webp, undefined);
-  t.is(stats.png, undefined);
-  t.is(stats.svg[0].url, "/img/wGeeKEWkof-900.svg");
+  assert.equal(stats.svg.length, 1);
+  assert.equal(stats.webp, undefined);
+  assert.equal(stats.png, undefined);
+  assert.equal(stats.svg[0].url, "/img/wGeeKEWkof-900.svg");
 
   let html = eleventyImage.generateHTML(stats, {
     alt: "Tiger",
   });
-  t.is(html, `<img src="/img/wGeeKEWkof-900.svg" alt="Tiger" width="900" height="900">`);
+  assert.equal(html, `<img src="/img/wGeeKEWkof-900.svg" alt="Tiger" width="900" height="900">`);
 });
 
-test("svgShortCircuit (on a raster source) #242 generateHTML function", async t => {
+test("svgShortCircuit (on a raster source) #242 generateHTML function", async () => {
   let stats = await eleventyImage("./test/bio-2017.jpg", {
     widths: ["auto"],
     formats: ["svg", "png"],
@@ -292,10 +293,10 @@ test("svgShortCircuit (on a raster source) #242 generateHTML function", async t 
   let html = eleventyImage.generateHTML(stats, {
     alt: "Zach’s ugly mug",
   });
-  t.is(html, `<img src="/img/KkPMmHd3hP-1280.png" alt="Zach’s ugly mug" width="1280" height="853">`);
+  assert.equal(html, `<img src="/img/KkPMmHd3hP-1280.png" alt="Zach’s ugly mug" width="1280" height="853">`);
 });
 
-test("Filter out empty format arrays", async t => {
+test("Filter out empty format arrays", async () => {
   let stats = {
     svg: [],
     jpeg: [
@@ -326,60 +327,59 @@ test("Filter out empty format arrays", async t => {
     alt: "Tiger",
     sizes: "100vw",
   });
-  t.truthy(!!html);
+  assert.ok(!!html);
 });
 
-test("Image markup (animated gif)", async t => {
+test("Image markup (animated gif)", async () => {
   let results = await eleventyImage("./test/earth-animated.gif", {
     dryRun: true,
     formats: ["auto"]
   });
 
-  t.is(generateHTML(results, {
+  assert.equal(generateHTML(results, {
     alt: ""
   }), `<img src="/img/YQVTYq1wRQ-400.gif" alt="" width="400" height="400">`);
 });
 
-test("Image markup (animated gif, two formats)", async t => {
+test("Image markup (animated gif, two formats)", async () => {
   let results = await eleventyImage("./test/earth-animated.gif", {
     dryRun: true,
     formats: ["webp", "auto"]
   });
 
-  t.is(generateHTML(results, {
+  assert.equal(generateHTML(results, {
     alt: ""
   }), `<picture><source type="image/webp" srcset="/img/YQVTYq1wRQ-400.webp"><img src="/img/YQVTYq1wRQ-400.gif" alt="" width="400" height="400"></picture>`);
 });
 
-test("Image markup (two formats, neither priority defined)", async t => {
+test("Image markup (two formats, neither priority defined)", async () => {
   let results = await eleventyImage("./test/earth-animated.gif", {
     dryRun: true,
     formats: ["tif", "heic"]
   });
 
-  let e = t.throws(() => generateHTML(results, { alt: "" }));
-  t.true(e.message.startsWith("Could not find the lowest <img>"));
+  assert.throws(() => generateHTML(results, { alt: "" }), { message: /^Could not find the lowest <img>/ });
 });
 
-test("Image markup (escaped `alt`)", async t => {
+test("Image markup (escaped `alt`)", async () => {
   let results = await eleventyImage("./test/bio-2017.jpg", {
     formats: ["auto"],
     dryRun: true,
   });
 
-  t.is(generateHTML(results, {
+  assert.equal(generateHTML(results, {
     alt: "This is a \"test"
   }), `<img src="/img/KkPMmHd3hP-1280.jpeg" alt="This is a &quot;test" width="1280" height="853">`);
 });
 
-test("Image markup (<picture> with attributes issue #197)", async t => {
+test("Image markup (<picture> with attributes issue #197)", async () => {
   let results = await eleventyImage("./test/bio-2017.jpg", {
     formats: ["webp", "auto"],
     dryRun: true,
     widths: [200,400]
   });
 
-  t.is(generateHTML(results, {
+  assert.equal(generateHTML(results, {
     alt: "",
     sizes: "100vw",
   }, {
@@ -392,7 +392,7 @@ test("Image markup (<picture> with attributes issue #197)", async t => {
     `</picture>`].join(""));
 });
 
-test("Issue #177", async t => {
+test("Issue #177", async () => {
   let src = "https://www.zachleat.com/img/avatar-2017.png?q=1";
 
   const options = {
@@ -418,10 +418,10 @@ test("Issue #177", async t => {
     class: 'w-full h-full object-cover',
   };
 
-  t.is(eleventyImage.generateHTML(metadata, imageAttributes), `<picture><source type="image/avif" srcset="/img/8u6v7oPGyC-160.avif" sizes="(max-width: 0px) 100vw"><img alt="" loading="lazy" decoding="async" fetchPriority="high" class="w-full h-full object-cover" src="/img/8u6v7oPGyC-160.jpeg" width="160" height="160"></picture>`);
+  assert.equal(eleventyImage.generateHTML(metadata, imageAttributes), `<picture><source type="image/avif" srcset="/img/8u6v7oPGyC-160.avif" sizes="(max-width: 0px) 100vw"><img alt="" loading="lazy" decoding="async" fetchPriority="high" class="w-full h-full object-cover" src="/img/8u6v7oPGyC-160.jpeg" width="160" height="160"></picture>`);
 });
 
-test("Image markup with smallest fallback dimensions", async t => {
+test("Image markup with smallest fallback dimensions", async () => {
   let results = await eleventyImage("./test/bio-2017.jpg", {
     dryRun: true,
     widths: [300, "auto"],
@@ -431,13 +431,13 @@ test("Image markup with smallest fallback dimensions", async t => {
     },
   });
 
-  t.is(generateHTML(results, {
+  assert.equal(generateHTML(results, {
     alt: "",
     sizes: "100vw"
   }), `<img src="/img/KkPMmHd3hP-300.jpeg" alt="" width="300" height="199" srcset="/img/KkPMmHd3hP-300.jpeg 300w, /img/KkPMmHd3hP-1280.jpeg 1280w" sizes="100vw">`);
 });
 
-test("returnType: html to <img>", async t => {
+test("returnType: html to <img>", async () => {
   let html = await eleventyImage("./test/bio-2017.jpg", {
     dryRun: true,
     formats: ["auto"],
@@ -451,10 +451,10 @@ test("returnType: html to <img>", async t => {
     },
   });
 
-  t.is(html, `<img alt="" src="/img/KkPMmHd3hP-1280.jpeg" width="1280" height="853">`);
+  assert.equal(html, `<img alt="" src="/img/KkPMmHd3hP-1280.jpeg" width="1280" height="853">`);
 });
 
-test("returnType: html to <picture>", async t => {
+test("returnType: html to <picture>", async () => {
   let html = await eleventyImage("./test/bio-2017.jpg", {
     dryRun: true,
     returnType: "html",
@@ -471,10 +471,10 @@ test("returnType: html to <picture>", async t => {
     },
   });
 
-  t.is(html, `<picture class="outer"><source type="image/webp" srcset="/img/KkPMmHd3hP-1280.webp"><img alt="" class="inner" src="/img/KkPMmHd3hP-1280.jpeg" width="1280" height="853"></picture>`);
+  assert.equal(html, `<picture class="outer"><source type="image/webp" srcset="/img/KkPMmHd3hP-1280.webp"><img alt="" class="inner" src="/img/KkPMmHd3hP-1280.jpeg" width="1280" height="853"></picture>`);
 });
 
-test("#239 full urls in urlPath", async t => {
+test("#239 full urls in urlPath", async () => {
   let html = await eleventyImage("./test/bio-2017.jpg", {
     dryRun: true,
     formats: ["auto"],
@@ -488,10 +488,10 @@ test("#239 full urls in urlPath", async t => {
     },
   });
 
-  t.is(html, `<img alt="" src="http://example.com/img/KkPMmHd3hP-1280.jpeg" width="1280" height="853">`);
+  assert.equal(html, `<img alt="" src="http://example.com/img/KkPMmHd3hP-1280.jpeg" width="1280" height="853">`);
 });
 
-test("User-supplied htmlOptions attributes are not mutated", async t => {
+test("User-supplied htmlOptions attributes are not mutated", async () => {
   let htmlOptions = {
     imgAttributes: { alt: "" },
     pictureAttributes: { class: "pic" },
@@ -504,9 +504,9 @@ test("User-supplied htmlOptions attributes are not mutated", async t => {
     htmlOptions,
   });
 
-  t.deepEqual(htmlOptions.imgAttributes, { alt: "" });
-  t.deepEqual(htmlOptions.pictureAttributes, { class: "pic" });
+  assert.deepEqual(htmlOptions.imgAttributes, { alt: "" });
+  assert.deepEqual(htmlOptions.pictureAttributes, { class: "pic" });
 
   results.eleventyImage.htmlOptions.pictureAttributes.id = "changed";
-  t.deepEqual(htmlOptions.pictureAttributes, { class: "pic" });
+  assert.deepEqual(htmlOptions.pictureAttributes, { class: "pic" });
 });

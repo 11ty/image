@@ -1,9 +1,10 @@
-import test from "ava";
+import test from "node:test";
+import assert from "node:assert/strict";
 import exifr from "exifr";
 
 import eleventyImage from "../img.js";
 
-test("Transform Empty", async t => {
+test("Transform Empty", async () => {
   let stats = await eleventyImage("./test/exif-sample-large.jpg", {
     formats: ["auto"],
     // transform: undefined,
@@ -11,10 +12,10 @@ test("Transform Empty", async t => {
   });
 
   let exif = await exifr.parse(stats.jpeg[0].buffer);
-  t.deepEqual(exif, undefined);
+  assert.deepEqual(exif, undefined);
 });
 
-test("Transform to keep exif", async t => {
+test("Transform to keep exif", async () => {
   let stats = await eleventyImage("./test/exif-sample-large.jpg", {
     formats: ["auto"],
     // Keep exif metadata
@@ -26,13 +27,13 @@ test("Transform to keep exif", async t => {
 
   let exif = await exifr.parse(stats.jpeg[0].buffer);
 
-  t.is(Math.round(exif.latitude), 50);
-  t.is(Math.round(exif.longitude), 15);
-  t.is(exif.ApertureValue, 2);
-  t.is(exif.BrightnessValue, 9.38);
+  assert.equal(Math.round(exif.latitude), 50);
+  assert.equal(Math.round(exif.longitude), 15);
+  assert.equal(exif.ApertureValue, 2);
+  assert.equal(exif.BrightnessValue, 9.38);
 });
 
-test("Transform to crop an image", async t => {
+test("Transform to crop an image", async () => {
   let stats = await eleventyImage("./test/exif-sample-large.jpg", {
     formats: ["auto"],
     transform: function customNameForCacheKey2(sharp) {
@@ -41,12 +42,12 @@ test("Transform to crop an image", async t => {
     dryRun: true,
   });
 
-  t.is(stats.jpeg[0].width, 300);
-  t.is(stats.jpeg[0].height, 300);
-  t.true(stats.jpeg[0].size < 50000);
+  assert.equal(stats.jpeg[0].width, 300);
+  assert.equal(stats.jpeg[0].height, 300);
+  assert.equal(stats.jpeg[0].size < 50000, true);
 });
 
-test("Resize in a transform an image takes precedence", async t => {
+test("Resize in a transform an image takes precedence", async () => {
   let stats = await eleventyImage("./test/exif-sample-large.jpg", {
     formats: ["auto"],
     transform: function customNameForCacheKey3(sharp) {
@@ -55,12 +56,12 @@ test("Resize in a transform an image takes precedence", async t => {
     dryRun: true,
   });
 
-  t.is(stats.jpeg[0].width, 400);
-  t.is(stats.jpeg[0].height, 300);
-  t.true(stats.jpeg[0].size < 50000);
+  assert.equal(stats.jpeg[0].width, 400);
+  assert.equal(stats.jpeg[0].height, 300);
+  assert.equal(stats.jpeg[0].size < 50000, true);
 });
 
-test("Transform receives target resize stats (narrowed to stable fields) for each width", async t => {
+test("Transform receives target resize stats (narrowed to stable fields) for each width", async () => {
   let received = [];
   await eleventyImage("./test/bio-2017.jpg", {
     widths: [100, 200],
@@ -73,17 +74,17 @@ test("Transform receives target resize stats (narrowed to stable fields) for eac
 
   // The target width for each `widths` entry is exposed to the transform
   let widths = received.map(stat => stat.width).sort((a, b) => a - b);
-  t.deepEqual(widths, [100, 200]);
+  assert.deepEqual(widths, [100, 200]);
 
   for(let stat of received) {
-    t.is(stat.format, "webp");
-    t.is(typeof stat.height, "number");
+    assert.equal(stat.format, "webp");
+    assert.equal(typeof stat.height, "number");
     // Only the stable, target-resize fields are exposed (no stale url/srcset/filename)
-    t.deepEqual(Object.keys(stat).sort(), ["format", "height", "width"]);
+    assert.deepEqual(Object.keys(stat).sort(), ["format", "height", "width"]);
   }
 });
 
-test("manualCacheKey differentiates the output hash for non-object (numeric) values #271", async t => {
+test("manualCacheKey differentiates the output hash for non-object (numeric) values #271", async () => {
   async function filenameFor(manualCacheKey) {
     let stats = await eleventyImage("./test/bio-2017.jpg", {
       widths: [100],
@@ -100,8 +101,8 @@ test("manualCacheKey differentiates the output hash for non-object (numeric) val
 
   // Different numeric keys must produce different filenames (regression: numbers
   // collapsed to `{}` and every ratio collided).
-  t.not(a, b);
+  assert.notEqual(a, b);
   // Identical keys must produce a stable filename.
-  t.is(a, aAgain);
+  assert.equal(a, aAgain);
 });
 

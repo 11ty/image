@@ -3,7 +3,8 @@ import fs from "node:fs";
 import os from "node:os";
 import { URL } from "node:url";
 
-import test from "ava";
+import test from "node:test";
+import assert from "node:assert/strict";
 import sharp from "sharp";
 import pixelmatch from 'pixelmatch';
 
@@ -11,64 +12,62 @@ import eleventyImage, { Image, Util } from "../img.js";
 
 // Remember that any outputPath tests must use path.join to work on Windows
 
-test("getFormats", t => {
+test("getFormats", () => {
   let formats = eleventyImage.getFormats("webp,png");
-  t.is(formats.length, 2);
-  t.is(formats[0], "webp");
-  t.is(formats[1], "png");
+  assert.equal(formats.length, 2);
+  assert.equal(formats[0], "webp");
+  assert.equal(formats[1], "png");
 });
 
-test("getFormats (three) with svg reorder", t => {
+test("getFormats (three) with svg reorder", () => {
   let formats = eleventyImage.getFormats("webp,png,svg");
-  t.is(formats.length, 3);
+  assert.equal(formats.length, 3);
   // svg should be first
-  t.is(formats[0], "svg");
-  t.is(formats[1], "webp");
-  t.is(formats[2], "png");
+  assert.equal(formats[0], "svg");
+  assert.equal(formats[1], "webp");
+  assert.equal(formats[2], "png");
 });
 
-test("getFormats (three) with svg reorder 2", t => {
+test("getFormats (three) with svg reorder 2", () => {
   let formats = eleventyImage.getFormats("webp,svg,png");
-  t.is(formats.length, 3);
+  assert.equal(formats.length, 3);
   // svg should be first
-  t.is(formats[0], "svg");
-  t.is(formats[1], "webp");
-  t.is(formats[2], "png");
+  assert.equal(formats[0], "svg");
+  assert.equal(formats[1], "webp");
+  assert.equal(formats[2], "png");
 });
 
-test("getFormats (three) with svg no reorder", t => {
+test("getFormats (three) with svg no reorder", () => {
   let formats = eleventyImage.getFormats("svg,webp,png");
-  t.is(formats.length, 3);
+  assert.equal(formats.length, 3);
   // svg should be first
-  t.is(formats[0], "svg");
-  t.is(formats[1], "webp");
-  t.is(formats[2], "png");
+  assert.equal(formats[0], "svg");
+  assert.equal(formats[1], "webp");
+  assert.equal(formats[2], "png");
 });
 
-test("getFormats removes duplicates", t => {
+test("getFormats removes duplicates", () => {
   let formats = eleventyImage.getFormats("svg,webp,png,webp,svg");
-  t.is(formats.length, 3);
+  assert.equal(formats.length, 3);
   // svg should be first
-  t.is(formats[0], "svg");
-  t.is(formats[1], "webp");
-  t.is(formats[2], "png");
+  assert.equal(formats[0], "svg");
+  assert.equal(formats[1], "webp");
+  assert.equal(formats[2], "png");
 });
 
-test("statsSync throws with an upgrade path (#211)", t => {
-  let err = t.throws(() => eleventyImage.statsSync("./test/bio-2017.jpg"));
-  t.true(err.message.includes("statsOnly"));
-  t.true(err.message.includes("v7.0.0"));
-  t.true(err.message.includes("#html-transform"));
+test("statsSync throws with an upgrade path (#211)", () => {
+  assert.throws(() => eleventyImage.statsSync("./test/bio-2017.jpg"), err => {
+    return err.message.includes("statsOnly") && err.message.includes("v7.0.0") && err.message.includes("#html-transform");
+  });
 });
 
-test("statsByDimensionsSync throws with an upgrade path (#211)", t => {
-  let err = t.throws(() => eleventyImage.statsByDimensionsSync("./test/bio-2017.jpg", 1280, 853));
-  t.true(err.message.includes("imageMetadataOverride"));
-  t.true(err.message.includes("v7.0.0"));
-  t.true(err.message.includes("#html-transform"));
+test("statsByDimensionsSync throws with an upgrade path (#211)", () => {
+  assert.throws(() => eleventyImage.statsByDimensionsSync("./test/bio-2017.jpg", 1280, 853), err => {
+    return err.message.includes("imageMetadataOverride") && err.message.includes("v7.0.0") && err.message.includes("#html-transform");
+  });
 });
 
-test("statsOnly with imageMetadataOverride on a local image (skips reading the file)", async t => {
+test("statsOnly with imageMetadataOverride on a local image (skips reading the file)", async () => {
   // Supplied dimensions differ from the real image (1280x853) and are used as-is,
   // proving the file is not read. Formerly `statsByDimensionsSync` for local paths.
   let stats = await eleventyImage("./test/bio-2017.jpg", {
@@ -79,13 +78,13 @@ test("statsOnly with imageMetadataOverride on a local image (skips reading the f
   });
 
   // won’t upscale past the supplied width
-  t.is(stats.jpeg.length, 1);
-  t.is(stats.jpeg[0].width, 164);
-  t.is(stats.jpeg[0].height, 164);
-  t.is(stats.jpeg[0].outputPath, path.join("img/KkPMmHd3hP-164.jpeg"));
+  assert.equal(stats.jpeg.length, 1);
+  assert.equal(stats.jpeg[0].width, 164);
+  assert.equal(stats.jpeg[0].height, 164);
+  assert.equal(stats.jpeg[0].outputPath, path.join("img/KkPMmHd3hP-164.jpeg"));
 });
 
-test("statsOnly still supports the deprecated remoteImageMetadata alias", async t => {
+test("statsOnly still supports the deprecated remoteImageMetadata alias", async () => {
   let stats = await eleventyImage("./test/bio-2017.jpg", {
     statsOnly: true,
     remoteImageMetadata: { width: 164, height: 164 },
@@ -93,117 +92,117 @@ test("statsOnly still supports the deprecated remoteImageMetadata alias", async 
     formats: ["jpeg"],
   });
 
-  t.is(stats.jpeg.length, 1);
-  t.is(stats.jpeg[0].width, 164);
-  t.is(stats.jpeg[0].height, 164);
+  assert.equal(stats.jpeg.length, 1);
+  assert.equal(stats.jpeg[0].width, 164);
+  assert.equal(stats.jpeg[0].height, 164);
 });
 
-test("statsOnly with jpeg input", async t => {
+test("statsOnly with jpeg input", async () => {
   let stats = await eleventyImage("./test/bio-2017.jpg", {
     statsOnly: true,
   });
-  t.is(stats.webp.length, 1);
-  t.is(stats.jpeg.length, 1);
+  assert.equal(stats.webp.length, 1);
+  assert.equal(stats.jpeg.length, 1);
 });
 
-test("statsOnly with widths", async t => {
+test("statsOnly with widths", async () => {
   let stats = await eleventyImage("./test/bio-2017.jpg", {
     statsOnly: true,
     widths: [300]
   });
-  t.is(stats.webp.length, 1);
-  t.is(stats.webp[0].width, 300);
-  t.is(stats.jpeg.length, 1);
-  t.is(stats.jpeg[0].width, 300);
+  assert.equal(stats.webp.length, 1);
+  assert.equal(stats.webp[0].width, 300);
+  assert.equal(stats.jpeg.length, 1);
+  assert.equal(stats.jpeg[0].width, 300);
 });
 
-test("statsOnly with two widths", async t => {
+test("statsOnly with two widths", async () => {
   let stats = await eleventyImage("./test/bio-2017.jpg", {
     statsOnly: true,
     widths: [300, 500]
   });
-  t.is(stats.webp.length, 2);
-  t.is(stats.webp[0].width, 300);
-  t.is(stats.webp[1].width, 500);
-  t.is(stats.jpeg.length, 2);
-  t.is(stats.jpeg[0].width, 300);
-  t.is(stats.jpeg[1].width, 500);
+  assert.equal(stats.webp.length, 2);
+  assert.equal(stats.webp[0].width, 300);
+  assert.equal(stats.webp[1].width, 500);
+  assert.equal(stats.jpeg.length, 2);
+  assert.equal(stats.jpeg[0].width, 300);
+  assert.equal(stats.jpeg[1].width, 500);
 });
 
-test("statsOnly with null width", async t => {
+test("statsOnly with null width", async () => {
   let stats = await eleventyImage("./test/bio-2017.jpg", {
     statsOnly: true,
     widths: [300, null]
   });
-  t.is(stats.webp.length, 2);
-  t.is(stats.webp[0].width, 300);
-  t.is(stats.webp[0].height, 199);
-  t.is(stats.webp[1].width, 1280);
-  t.is(stats.webp[1].height, 853);
-  t.is(stats.jpeg.length, 2);
-  t.is(stats.jpeg[0].width, 300);
-  t.is(stats.jpeg[0].height, 199);
-  t.is(stats.jpeg[1].width, 1280);
-  t.is(stats.jpeg[1].height, 853);
+  assert.equal(stats.webp.length, 2);
+  assert.equal(stats.webp[0].width, 300);
+  assert.equal(stats.webp[0].height, 199);
+  assert.equal(stats.webp[1].width, 1280);
+  assert.equal(stats.webp[1].height, 853);
+  assert.equal(stats.jpeg.length, 2);
+  assert.equal(stats.jpeg[0].width, 300);
+  assert.equal(stats.jpeg[0].height, 199);
+  assert.equal(stats.jpeg[1].width, 1280);
+  assert.equal(stats.jpeg[1].height, 853);
 });
 
-test("statsOnly with 'auto' width", async t => {
+test("statsOnly with 'auto' width", async () => {
   let stats = await eleventyImage("./test/bio-2017.jpg", {
     statsOnly: true,
     widths: [300, 'auto']
   });
-  t.is(stats.webp.length, 2);
-  t.is(stats.webp[0].width, 300);
-  t.is(stats.webp[0].height, 199);
-  t.is(stats.webp[1].width, 1280);
-  t.is(stats.webp[1].height, 853);
-  t.is(stats.jpeg.length, 2);
-  t.is(stats.jpeg[0].width, 300);
-  t.is(stats.jpeg[0].height, 199);
-  t.is(stats.jpeg[1].width, 1280);
-  t.is(stats.jpeg[1].height, 853);
+  assert.equal(stats.webp.length, 2);
+  assert.equal(stats.webp[0].width, 300);
+  assert.equal(stats.webp[0].height, 199);
+  assert.equal(stats.webp[1].width, 1280);
+  assert.equal(stats.webp[1].height, 853);
+  assert.equal(stats.jpeg.length, 2);
+  assert.equal(stats.jpeg[0].width, 300);
+  assert.equal(stats.jpeg[0].height, 199);
+  assert.equal(stats.jpeg[1].width, 1280);
+  assert.equal(stats.jpeg[1].height, 853);
 });
 
-test("Use 'auto' format as original", async t => {
+test("Use 'auto' format as original", async () => {
   let stats = await eleventyImage("./test/bio-2017.jpg", {
     widths: [null],
     formats: ['auto'],
     outputDir: "./test/img/"
   });
 
-  t.is(stats.auto, undefined);
-  t.is(stats.jpeg.length, 1);
-  t.is(stats.jpeg[0].outputPath, path.join("test/img/KkPMmHd3hP-1280.jpeg"));
-  t.is(stats.jpeg[0].width, 1280);
+  assert.equal(stats.auto, undefined);
+  assert.equal(stats.jpeg.length, 1);
+  assert.equal(stats.jpeg[0].outputPath, path.join("test/img/KkPMmHd3hP-1280.jpeg"));
+  assert.equal(stats.jpeg[0].width, 1280);
 });
 
-test("#212 Passthrough (`formats: ['passthrough']`) copies original bytes unchanged", async t => {
+test("#212 Passthrough (`formats: ['passthrough']`) copies original bytes unchanged", async () => {
   let outputDir = "./test/img-passthrough/";
   let stats = await eleventyImage("./test/bio-2017.jpg", {
     formats: ["passthrough"],
     outputDir,
   });
 
-  t.is(stats.jpeg.length, 1);
-  t.is(stats.jpeg[0].width, 1280);
-  t.is(stats.jpeg[0].height, 853);
-  t.is(stats.jpeg[0].format, "jpeg");
-  t.is(stats.jpeg[0].sourceType, "image/jpeg");
+  assert.equal(stats.jpeg.length, 1);
+  assert.equal(stats.jpeg[0].width, 1280);
+  assert.equal(stats.jpeg[0].height, 853);
+  assert.equal(stats.jpeg[0].format, "jpeg");
+  assert.equal(stats.jpeg[0].sourceType, "image/jpeg");
 
   // Passthrough filename is `hash.ext` (no numeric width suffix), which also keeps it
   // distinct from a re-encoded `hash-<width>.ext` of the same native format.
-  t.is(path.basename(stats.jpeg[0].outputPath), "KkPMmHd3hP.jpeg");
+  assert.equal(path.basename(stats.jpeg[0].outputPath), "KkPMmHd3hP.jpeg");
 
   // Output is byte-for-byte identical to the source (no Sharp re-encode)
   let source = fs.readFileSync("./test/bio-2017.jpg");
   let output = fs.readFileSync(stats.jpeg[0].outputPath);
-  t.is(stats.jpeg[0].size, source.length);
-  t.true(source.equals(output));
+  assert.equal(stats.jpeg[0].size, source.length);
+  assert.equal(source.equals(output), true);
 
   fs.rmSync(outputDir, { recursive: true, force: true });
 });
 
-test("#212 Passthrough leaves an existing output target untouched under the default cache", async t => {
+test("#212 Passthrough leaves an existing output target untouched under the default cache", async () => {
   let outputDir = "./test/img-passthrough-exists/";
   let outputPath = path.join(outputDir, "KkPMmHd3hP.jpeg");
 
@@ -217,14 +216,14 @@ test("#212 Passthrough leaves an existing output target untouched under the defa
   });
 
   // The existing file is treated as a cache hit (content-addressed filename) and NOT rewritten.
-  t.is(stats.jpeg[0].outputPath, outputPath);
-  t.is(fs.readFileSync(outputPath, "utf8"), "SENTINEL");
-  t.is(stats.jpeg[0].size, "SENTINEL".length);
+  assert.equal(stats.jpeg[0].outputPath, outputPath);
+  assert.equal(fs.readFileSync(outputPath, "utf8"), "SENTINEL");
+  assert.equal(stats.jpeg[0].size, "SENTINEL".length);
 
   fs.rmSync(outputDir, { recursive: true, force: true });
 });
 
-test("#212 Passthrough overwrites an existing output target when `useCache: false`", async t => {
+test("#212 Passthrough overwrites an existing output target when `useCache: false`", async () => {
   let outputDir = "./test/img-passthrough-nocache/";
   let outputPath = path.join(outputDir, "KkPMmHd3hP.jpeg");
 
@@ -239,13 +238,13 @@ test("#212 Passthrough overwrites an existing output target when `useCache: fals
 
   // Original bytes are written over the sentinel.
   let source = fs.readFileSync("./test/bio-2017.jpg");
-  t.is(stats.jpeg[0].outputPath, outputPath);
-  t.true(source.equals(fs.readFileSync(outputPath)));
+  assert.equal(stats.jpeg[0].outputPath, outputPath);
+  assert.equal(source.equals(fs.readFileSync(outputPath)), true);
 
   fs.rmSync(outputDir, { recursive: true, force: true });
 });
 
-test("#212 A `format=passthrough` on-request URL streams the original bytes (no re-encode)", async t => {
+test("#212 A `format=passthrough` on-request URL streams the original bytes (no re-encode)", async () => {
   // The transform emits `.../?...&format=passthrough` during --serve; the on-request handler
   // then requests `formats: ["passthrough"]`. No handler special-casing is needed—this mirrors it.
   let stats = await eleventyImage("./test/bio-2017.jpg", {
@@ -257,27 +256,27 @@ test("#212 A `format=passthrough` on-request URL streams the original bytes (no 
 
   let stat = stats[Object.keys(stats).pop()][0]; // handler’s selection
   let source = fs.readFileSync("./test/bio-2017.jpg");
-  t.is(stat.sourceType, "image/jpeg"); // native Content-Type, not "passthrough"
-  t.true(source.equals(stat.buffer));
+  assert.equal(stat.sourceType, "image/jpeg"); // native Content-Type, not "passthrough"
+  assert.equal(source.equals(stat.buffer), true);
 });
 
-test("#212 Passthrough via string `formats: 'passthrough'` (same as the array form)", async t => {
+test("#212 Passthrough via string `formats: 'passthrough'` (same as the array form)", async () => {
   let stats = await eleventyImage("./test/bio-2017.jpg", {
     formats: "passthrough",
     dryRun: true,
     outputDir: "./test/img-passthrough-string/"
   });
 
-  t.is(stats.jpeg.length, 1);
-  t.is(stats.jpeg[0].width, 1280);
-  t.is(stats.jpeg[0].height, 853);
-  t.is(stats.jpeg[0].format, "jpeg");
+  assert.equal(stats.jpeg.length, 1);
+  assert.equal(stats.jpeg[0].width, 1280);
+  assert.equal(stats.jpeg[0].height, 853);
+  assert.equal(stats.jpeg[0].format, "jpeg");
 
   let source = fs.readFileSync("./test/bio-2017.jpg");
-  t.true(source.equals(stats.jpeg[0].buffer));
+  assert.equal(source.equals(stats.jpeg[0].buffer), true);
 });
 
-test("#212 Passthrough (`formats: ['passthrough']`) with dryRun returns a buffer and writes nothing", async t => {
+test("#212 Passthrough (`formats: ['passthrough']`) with dryRun returns a buffer and writes nothing", async () => {
   let outputDir = "./test/img-passthrough-dryrun/";
   let stats = await eleventyImage("./test/bio-2017.jpg", {
     formats: ["passthrough"],
@@ -285,16 +284,16 @@ test("#212 Passthrough (`formats: ['passthrough']`) with dryRun returns a buffer
     outputDir,
   });
 
-  t.is(stats.jpeg.length, 1);
-  t.is(stats.jpeg[0].width, 1280);
-  t.true(Buffer.isBuffer(stats.jpeg[0].buffer));
+  assert.equal(stats.jpeg.length, 1);
+  assert.equal(stats.jpeg[0].width, 1280);
+  assert.equal(Buffer.isBuffer(stats.jpeg[0].buffer), true);
 
   let source = fs.readFileSync("./test/bio-2017.jpg");
-  t.true(source.equals(stats.jpeg[0].buffer));
-  t.false(fs.existsSync(stats.jpeg[0].outputPath));
+  assert.equal(source.equals(stats.jpeg[0].buffer), true);
+  assert.equal(fs.existsSync(stats.jpeg[0].outputPath), false);
 });
 
-test("#212 Passthrough as one format among many keeps the untouched original alongside processed output", async t => {
+test("#212 Passthrough as one format among many keeps the untouched original alongside processed output", async () => {
   let outputDir = "./test/img-passthrough-mixed/";
   let stats = await eleventyImage("./test/bio-2017.jpg", {
     formats: ["webp", "passthrough"],
@@ -302,22 +301,22 @@ test("#212 Passthrough as one format among many keeps the untouched original alo
   });
 
   // webp is Sharp-processed; jpeg (native) is the verbatim original copy
-  t.is(stats.webp.length, 1);
-  t.is(stats.jpeg.length, 1);
-  t.is(stats.jpeg[0].width, 1280);
-  t.is(stats.jpeg[0].height, 853);
+  assert.equal(stats.webp.length, 1);
+  assert.equal(stats.jpeg.length, 1);
+  assert.equal(stats.jpeg[0].width, 1280);
+  assert.equal(stats.jpeg[0].height, 853);
 
   let source = fs.readFileSync("./test/bio-2017.jpg");
   let jpegOutput = fs.readFileSync(stats.jpeg[0].outputPath);
-  t.true(source.equals(jpegOutput)); // original, byte-for-byte
+  assert.equal(source.equals(jpegOutput), true); // original, byte-for-byte
 
   let webpOutput = fs.readFileSync(stats.webp[0].outputPath);
-  t.false(source.equals(webpOutput)); // genuinely re-encoded, not a copy
+  assert.equal(source.equals(webpOutput), false); // genuinely re-encoded, not a copy
 
   fs.rmSync(outputDir, { recursive: true, force: true });
 });
 
-test("#212 Passthrough and a re-encode of the same native format get distinct filenames (no collision)", async t => {
+test("#212 Passthrough and a re-encode of the same native format get distinct filenames (no collision)", async () => {
   let outputDir = "./test/img-passthrough-collision/";
   let stats = await eleventyImage("./test/bio-2017.jpg", {
     formats: ["jpeg", "passthrough"],
@@ -325,54 +324,54 @@ test("#212 Passthrough and a re-encode of the same native format get distinct fi
     outputDir,
   });
 
-  t.is(stats.jpeg.length, 2);
+  assert.equal(stats.jpeg.length, 2);
   let passthrough = stats.jpeg.find(s => s.passthrough);
   let reencoded = stats.jpeg.find(s => !s.passthrough);
 
-  t.is(path.basename(passthrough.outputPath), "KkPMmHd3hP.jpeg"); // hash.ext
-  t.is(path.basename(reencoded.outputPath), "KkPMmHd3hP-1280.jpeg"); // hash-<width>.ext
-  t.not(passthrough.outputPath, reencoded.outputPath);
+  assert.equal(path.basename(passthrough.outputPath), "KkPMmHd3hP.jpeg"); // hash.ext
+  assert.equal(path.basename(reencoded.outputPath), "KkPMmHd3hP-1280.jpeg"); // hash-<width>.ext
+  assert.notEqual(passthrough.outputPath, reencoded.outputPath);
 
   // Passthrough is the untouched original; the re-encode is not
   let source = fs.readFileSync("./test/bio-2017.jpg");
-  t.true(source.equals(passthrough.buffer));
-  t.false(source.equals(reencoded.buffer));
+  assert.equal(source.equals(passthrough.buffer), true);
+  assert.equal(source.equals(reencoded.buffer), false);
 });
 
-test("Try to use a width larger than original", async t => {
+test("Try to use a width larger than original", async () => {
   let stats = await eleventyImage("./test/bio-2017.jpg", {
     widths: [1500],
     formats: ["jpeg"],
     outputDir: "./test/img/"
   });
-  t.is(stats.jpeg.length, 1);
-  t.is(stats.jpeg[0].outputPath, path.join("test/img/KkPMmHd3hP-1280.jpeg"));
-  t.is(stats.jpeg[0].width, 1280);
+  assert.equal(stats.jpeg.length, 1);
+  assert.equal(stats.jpeg[0].outputPath, path.join("test/img/KkPMmHd3hP-1280.jpeg"));
+  assert.equal(stats.jpeg[0].width, 1280);
 });
 
-test("Try to use a width larger than original (two sizes)", async t => {
+test("Try to use a width larger than original (two sizes)", async () => {
   let stats = await eleventyImage("./test/bio-2017.jpg", {
     widths: [1500, 2000],
     formats: ["jpeg"],
     outputDir: "./test/img/"
   });
-  t.is(stats.jpeg.length, 1);
-  t.is(stats.jpeg[0].outputPath, path.join("test/img/KkPMmHd3hP-1280.jpeg"));
-  t.is(stats.jpeg[0].width, 1280);
+  assert.equal(stats.jpeg.length, 1);
+  assert.equal(stats.jpeg[0].outputPath, path.join("test/img/KkPMmHd3hP-1280.jpeg"));
+  assert.equal(stats.jpeg[0].width, 1280);
 });
 
-test("Try to use a width larger than original (with a null in there)", async t => {
+test("Try to use a width larger than original (with a null in there)", async () => {
   let stats = await eleventyImage("./test/bio-2017.jpg", {
     widths: [1500, null],
     formats: ["jpeg"],
     outputDir: "./test/img/"
   });
-  t.is(stats.jpeg.length, 1);
-  t.is(stats.jpeg[0].outputPath, path.join("test/img/KkPMmHd3hP-1280.jpeg"));
-  t.is(stats.jpeg[0].width, 1280);
+  assert.equal(stats.jpeg.length, 1);
+  assert.equal(stats.jpeg[0].outputPath, path.join("test/img/KkPMmHd3hP-1280.jpeg"));
+  assert.equal(stats.jpeg[0].width, 1280);
 });
 
-test("Minimum width threshold (valid)", async t => {
+test("Minimum width threshold (valid)", async () => {
   // original is 1280
   let stats = await eleventyImage("./test/bio-2017.jpg", {
     widths: [400, 1300],
@@ -380,14 +379,14 @@ test("Minimum width threshold (valid)", async t => {
     outputDir: "./test/img/",
     dryRun: true,
   });
-  t.is(stats.jpeg.length, 2);
-  t.is(stats.jpeg[0].outputPath, path.join("test/img/KkPMmHd3hP-400.jpeg"));
-  t.is(stats.jpeg[0].width, 400);
-  t.is(stats.jpeg[1].outputPath, path.join("test/img/KkPMmHd3hP-1280.jpeg"));
-  t.is(stats.jpeg[1].width, 1280);
+  assert.equal(stats.jpeg.length, 2);
+  assert.equal(stats.jpeg[0].outputPath, path.join("test/img/KkPMmHd3hP-400.jpeg"));
+  assert.equal(stats.jpeg[0].width, 400);
+  assert.equal(stats.jpeg[1].outputPath, path.join("test/img/KkPMmHd3hP-1280.jpeg"));
+  assert.equal(stats.jpeg[1].width, 1280);
 });
 
-test("Minimum width threshold (one width larger that source)", async t => {
+test("Minimum width threshold (one width larger that source)", async () => {
   // original is 1280
   let stats = await eleventyImage("./test/bio-2017.jpg", {
     widths: [1800],
@@ -395,12 +394,12 @@ test("Minimum width threshold (one width larger that source)", async t => {
     outputDir: "./test/img/",
     dryRun: true,
   });
-  t.is(stats.jpeg.length, 1);
-  t.is(stats.jpeg[0].outputPath, path.join("test/img/KkPMmHd3hP-1280.jpeg"));
-  t.is(stats.jpeg[0].width, 1280);
+  assert.equal(stats.jpeg.length, 1);
+  assert.equal(stats.jpeg[0].outputPath, path.join("test/img/KkPMmHd3hP-1280.jpeg"));
+  assert.equal(stats.jpeg[0].width, 1280);
 });
 
-test("Minimum width threshold (one gets rejected)", async t => {
+test("Minimum width threshold (one gets rejected)", async () => {
   // original is 1280
   let stats = await eleventyImage("./test/bio-2017.jpg", {
     widths: [1200, 1300],
@@ -408,12 +407,12 @@ test("Minimum width threshold (one gets rejected)", async t => {
     outputDir: "./test/img/",
     dryRun: true,
   });
-  t.is(stats.jpeg.length, 1);
-  t.is(stats.jpeg[0].outputPath, path.join("test/img/KkPMmHd3hP-1200.jpeg"));
-  t.is(stats.jpeg[0].width, 1200);
+  assert.equal(stats.jpeg.length, 1);
+  assert.equal(stats.jpeg[0].outputPath, path.join("test/img/KkPMmHd3hP-1200.jpeg"));
+  assert.equal(stats.jpeg[0].width, 1200);
 });
 
-test("Minimum width threshold (one gets rejected, higher max)", async t => {
+test("Minimum width threshold (one gets rejected, higher max)", async () => {
   // original is 1280
   let stats = await eleventyImage("./test/bio-2017.jpg", {
     widths: [1200, 1500],
@@ -421,12 +420,12 @@ test("Minimum width threshold (one gets rejected, higher max)", async t => {
     outputDir: "./test/img/",
     dryRun: true,
   });
-  t.is(stats.jpeg.length, 1);
-  t.is(stats.jpeg[0].outputPath, path.join("test/img/KkPMmHd3hP-1200.jpeg"));
-  t.is(stats.jpeg[0].width, 1200);
+  assert.equal(stats.jpeg.length, 1);
+  assert.equal(stats.jpeg[0].outputPath, path.join("test/img/KkPMmHd3hP-1200.jpeg"));
+  assert.equal(stats.jpeg[0].width, 1200);
 });
 
-test("Minimum width threshold (one gets rejected, lower min)", async t => {
+test("Minimum width threshold (one gets rejected, lower min)", async () => {
   // original is 1280
   let stats = await eleventyImage("./test/bio-2017.jpg", {
     widths: [1100, 1500],
@@ -434,59 +433,59 @@ test("Minimum width threshold (one gets rejected, lower min)", async t => {
     outputDir: "./test/img/",
     dryRun: true,
   });
-  t.is(stats.jpeg.length, 1);
-  t.is(stats.jpeg[0].outputPath, path.join("test/img/KkPMmHd3hP-1100.jpeg"));
-  t.is(stats.jpeg[0].width, 1100);
+  assert.equal(stats.jpeg.length, 1);
+  assert.equal(stats.jpeg[0].outputPath, path.join("test/img/KkPMmHd3hP-1100.jpeg"));
+  assert.equal(stats.jpeg[0].width, 1100);
 });
 
-test("Just falsy width", async t => {
+test("Just falsy width", async () => {
   let stats = await eleventyImage("./test/bio-2017.jpg", {
     widths: [null],
     formats: ["jpeg"],
     outputDir: "./test/img/"
   });
-  t.is(stats.jpeg.length, 1);
-  t.is(stats.jpeg[0].outputPath, path.join("test/img/KkPMmHd3hP-1280.jpeg"));
-  t.is(stats.jpeg[0].width, 1280);
+  assert.equal(stats.jpeg.length, 1);
+  assert.equal(stats.jpeg[0].outputPath, path.join("test/img/KkPMmHd3hP-1280.jpeg"));
+  assert.equal(stats.jpeg[0].width, 1280);
 });
 
-test("Use exact same width as original", async t => {
+test("Use exact same width as original", async () => {
   let stats = await eleventyImage("./test/bio-2017.jpg", {
     widths: [1280],
     formats: ["jpeg"],
     outputDir: "./test/img/"
   });
-  t.is(stats.jpeg.length, 1);
+  assert.equal(stats.jpeg.length, 1);
   // breaking change in 0.5: always use width in filename
-  t.is(stats.jpeg[0].outputPath, path.join("test/img/KkPMmHd3hP-1280.jpeg"));
-  t.is(stats.jpeg[0].width, 1280);
+  assert.equal(stats.jpeg[0].outputPath, path.join("test/img/KkPMmHd3hP-1280.jpeg"));
+  assert.equal(stats.jpeg[0].width, 1280);
 });
 
-test("Try to use a width larger than original (statsOnly)", async t => {
+test("Try to use a width larger than original (statsOnly)", async () => {
   let stats = await eleventyImage("./test/bio-2017.jpg", {
     statsOnly: true,
     widths: [1500],
     formats: ["jpeg"]
   });
 
-  t.is(stats.jpeg.length, 1);
-  t.is(stats.jpeg[0].url, "/img/KkPMmHd3hP-1280.jpeg");
-  t.is(stats.jpeg[0].width, 1280);
+  assert.equal(stats.jpeg.length, 1);
+  assert.equal(stats.jpeg[0].url, "/img/KkPMmHd3hP-1280.jpeg");
+  assert.equal(stats.jpeg[0].width, 1280);
 });
 
-test("Use exact same width as original (statsOnly)", async t => {
+test("Use exact same width as original (statsOnly)", async () => {
   let stats = await eleventyImage("./test/bio-2017.jpg", {
     statsOnly: true,
     widths: [1280],
     formats: ["jpeg"]
   });
 
-  t.is(stats.jpeg.length, 1);
-  t.is(stats.jpeg[0].url, "/img/KkPMmHd3hP-1280.jpeg");
-  t.is(stats.jpeg[0].width, 1280);
+  assert.equal(stats.jpeg.length, 1);
+  assert.equal(stats.jpeg[0].url, "/img/KkPMmHd3hP-1280.jpeg");
+  assert.equal(stats.jpeg[0].width, 1280);
 });
 
-test("Use custom function to define file names", async (t) => {
+test("Use custom function to define file names", async () => {
   let stats = await eleventyImage("./test/bio-2017.jpg", {
     widths: [600, 1280],
     formats: ["jpeg"],
@@ -503,56 +502,56 @@ test("Use custom function to define file names", async (t) => {
     }
   });
 
-  t.is(stats.jpeg.length, 2);
-  t.is(stats.jpeg[0].outputPath, path.join("test/img/bio-2017-KkPMmHd3hP-600.jpeg"));
-  t.is(stats.jpeg[0].url, "/img/bio-2017-KkPMmHd3hP-600.jpeg");
-  t.is(stats.jpeg[0].srcset, "/img/bio-2017-KkPMmHd3hP-600.jpeg 600w");
-  t.is(stats.jpeg[0].width, 600);
-  t.is(stats.jpeg[1].outputPath, path.join("test/img/bio-2017-KkPMmHd3hP-1280.jpeg"));
-  t.is(stats.jpeg[1].url, "/img/bio-2017-KkPMmHd3hP-1280.jpeg");
-  t.is(stats.jpeg[1].srcset, "/img/bio-2017-KkPMmHd3hP-1280.jpeg 1280w");
-  t.is(stats.jpeg[1].width, 1280);
+  assert.equal(stats.jpeg.length, 2);
+  assert.equal(stats.jpeg[0].outputPath, path.join("test/img/bio-2017-KkPMmHd3hP-600.jpeg"));
+  assert.equal(stats.jpeg[0].url, "/img/bio-2017-KkPMmHd3hP-600.jpeg");
+  assert.equal(stats.jpeg[0].srcset, "/img/bio-2017-KkPMmHd3hP-600.jpeg 600w");
+  assert.equal(stats.jpeg[0].width, 600);
+  assert.equal(stats.jpeg[1].outputPath, path.join("test/img/bio-2017-KkPMmHd3hP-1280.jpeg"));
+  assert.equal(stats.jpeg[1].url, "/img/bio-2017-KkPMmHd3hP-1280.jpeg");
+  assert.equal(stats.jpeg[1].srcset, "/img/bio-2017-KkPMmHd3hP-1280.jpeg 1280w");
+  assert.equal(stats.jpeg[1].width, 1280);
 });
 
-test("Unavatar test", async t => {
+test("Unavatar test", async () => {
   let stats = await eleventyImage("https://unavatar.now.sh/twitter/zachleat?fallback=false", {
     statsOnly: true,
     imageMetadataOverride: { width: 400, height: 400 },
     widths: [75],
   });
 
-  t.is(stats.webp.length, 1);
-  t.is(stats.webp[0].width, 75);
-  t.is(stats.webp[0].height, 75);
-  t.is(stats.jpeg.length, 1);
-  t.is(stats.jpeg[0].width, 75);
-  t.is(stats.jpeg[0].height, 75);
+  assert.equal(stats.webp.length, 1);
+  assert.equal(stats.webp[0].width, 75);
+  assert.equal(stats.webp[0].height, 75);
+  assert.equal(stats.jpeg.length, 1);
+  assert.equal(stats.jpeg[0].width, 75);
+  assert.equal(stats.jpeg[0].height, 75);
 });
 
-test("Ask for svg output from a raster image (skipped)", async t => {
+test("Ask for svg output from a raster image (skipped)", async () => {
   let stats = await eleventyImage("./test/bio-2017.jpg", {
     widths: [null],
     formats: ["svg"],
     outputDir: "./test/img/"
   });
 
-  t.deepEqual(stats, {});
+  assert.deepEqual(stats, {});
 });
 
-test("Upscale an SVG, Issue #32", async t => {
+test("Upscale an SVG, Issue #32", async () => {
   let stats = await eleventyImage("./test/logo.svg", {
     widths: [3000],
     formats: ["png"],
     outputDir: "./test/img/"
   });
 
-  t.is(stats.png.length, 1);
-  t.is(stats.png[0].filename.slice(-9), "-3000.png"); // should include width in filename
-  t.is(stats.png[0].width, 3000);
-  t.is(stats.png[0].height, 4179);
+  assert.equal(stats.png.length, 1);
+  assert.equal(stats.png[0].filename.slice(-9), "-3000.png"); // should include width in filename
+  assert.equal(stats.png[0].width, 3000);
+  assert.equal(stats.png[0].height, 4179);
 });
 
-test("Upscale an SVG (disallowed in option), Issue #32", async t => {
+test("Upscale an SVG (disallowed in option), Issue #32", async () => {
   let stats = await eleventyImage("./test/logo.svg", {
     widths: [3000],
     formats: ["png"],
@@ -560,13 +559,13 @@ test("Upscale an SVG (disallowed in option), Issue #32", async t => {
     svgAllowUpscale: false
   });
 
-  t.is(stats.png.length, 1);
-  t.not(stats.png[0].filename.slice(-9), "-3000.png"); // should not include width in filename
-  t.is(stats.png[0].width, 1569);
-  t.is(stats.png[0].height, 2186);
+  assert.equal(stats.png.length, 1);
+  assert.notEqual(stats.png[0].filename.slice(-9), "-3000.png"); // should not include width in filename
+  assert.equal(stats.png[0].width, 1569);
+  assert.equal(stats.png[0].height, 2186);
 });
 
-test("svgShortCircuit", async t => {
+test("svgShortCircuit", async () => {
   let stats = await eleventyImage("./test/logo.svg", {
     widths: [null],
     formats: ["svg", "png", "webp"],
@@ -574,12 +573,12 @@ test("svgShortCircuit", async t => {
     svgShortCircuit: true,
   });
 
-  t.deepEqual(Object.keys(stats), ["svg"]);
-  t.is(stats.svg.length, 1);
-  t.is(stats.svg[0].size, 1936);
+  assert.deepEqual(Object.keys(stats), ["svg"]);
+  assert.equal(stats.svg.length, 1);
+  assert.equal(stats.svg[0].size, 1936);
 });
 
-test("svgShortCircuit (on a raster source) #242", async t => {
+test("svgShortCircuit (on a raster source) #242", async () => {
   let stats = await eleventyImage("./test/bio-2017.jpg", {
     widths: ["auto"],
     formats: ["svg", "png"],
@@ -588,82 +587,82 @@ test("svgShortCircuit (on a raster source) #242", async t => {
     dryRun: true,
   });
 
-  t.deepEqual(Object.keys(stats), ["png"]);
-  t.is(stats.png.length, 1);
-  t.is(stats.png[0].size, 2511602);
+  assert.deepEqual(Object.keys(stats), ["png"]);
+  assert.equal(stats.png.length, 1);
+  assert.equal(stats.png[0].size, 2511602);
 });
 
 
-test("getWidths", t => {
-  t.deepEqual(eleventyImage.getWidths(300, [null]), [300]); // want original
-  t.deepEqual(eleventyImage.getWidths(300, ['auto']), [300]); // want original
-  t.deepEqual(eleventyImage.getWidths(300, [600]), [300]); // want larger
-  t.deepEqual(eleventyImage.getWidths(300, [150]), [150]); // want smaller
+test("getWidths", () => {
+  assert.deepEqual(eleventyImage.getWidths(300, [null]), [300]); // want original
+  assert.deepEqual(eleventyImage.getWidths(300, ['auto']), [300]); // want original
+  assert.deepEqual(eleventyImage.getWidths(300, [600]), [300]); // want larger
+  assert.deepEqual(eleventyImage.getWidths(300, [150]), [150]); // want smaller
 
-  t.deepEqual(eleventyImage.getWidths(300, [600, null]), [300]);
-  t.deepEqual(eleventyImage.getWidths(300, [null, 600]), [300]);
-  t.deepEqual(eleventyImage.getWidths(300, [600, 'auto']), [300]);
-  t.deepEqual(eleventyImage.getWidths(300, ['auto', 600]), [300]);
-  t.deepEqual(eleventyImage.getWidths(300, [150, null]), [150,300]);
-  t.deepEqual(eleventyImage.getWidths(300, [null, 150]), [150,300]);
-  t.deepEqual(eleventyImage.getWidths(300, [150, 'auto']), [150,300]);
-  t.deepEqual(eleventyImage.getWidths(300, ['auto', 150]), [150,300]);
+  assert.deepEqual(eleventyImage.getWidths(300, [600, null]), [300]);
+  assert.deepEqual(eleventyImage.getWidths(300, [null, 600]), [300]);
+  assert.deepEqual(eleventyImage.getWidths(300, [600, 'auto']), [300]);
+  assert.deepEqual(eleventyImage.getWidths(300, ['auto', 600]), [300]);
+  assert.deepEqual(eleventyImage.getWidths(300, [150, null]), [150,300]);
+  assert.deepEqual(eleventyImage.getWidths(300, [null, 150]), [150,300]);
+  assert.deepEqual(eleventyImage.getWidths(300, [150, 'auto']), [150,300]);
+  assert.deepEqual(eleventyImage.getWidths(300, ['auto', 150]), [150,300]);
 });
 
-test("getWidths removes duplicates", t => {
-  t.deepEqual(eleventyImage.getWidths(300, [null, 300]), [300]);
-  t.deepEqual(eleventyImage.getWidths(300, [300, 300]), [300]);
-  t.deepEqual(eleventyImage.getWidths(600, [300, 400, 300, 500, 400]), [300, 400, 500]);
+test("getWidths removes duplicates", () => {
+  assert.deepEqual(eleventyImage.getWidths(300, [null, 300]), [300]);
+  assert.deepEqual(eleventyImage.getWidths(300, [300, 300]), [300]);
+  assert.deepEqual(eleventyImage.getWidths(600, [300, 400, 300, 500, 400]), [300, 400, 500]);
 });
 
-test("getWidths allow upscaling", t => {
-  t.deepEqual(eleventyImage.getWidths(300, [null], true), [300]); // want original
-  t.deepEqual(eleventyImage.getWidths(300, ['auto'], true), [300]); // want original
-  t.deepEqual(eleventyImage.getWidths(300, [600], true), [600]); // want larger
-  t.deepEqual(eleventyImage.getWidths(300, [150], true), [150]); // want smaller
+test("getWidths allow upscaling", () => {
+  assert.deepEqual(eleventyImage.getWidths(300, [null], true), [300]); // want original
+  assert.deepEqual(eleventyImage.getWidths(300, ['auto'], true), [300]); // want original
+  assert.deepEqual(eleventyImage.getWidths(300, [600], true), [600]); // want larger
+  assert.deepEqual(eleventyImage.getWidths(300, [150], true), [150]); // want smaller
 
-  t.deepEqual(eleventyImage.getWidths(300, [600, null], true), [300, 600]);
-  t.deepEqual(eleventyImage.getWidths(300, [null, 600], true), [300, 600]);
-  t.deepEqual(eleventyImage.getWidths(300, [600, 'auto'], true), [300, 600]);
-  t.deepEqual(eleventyImage.getWidths(300, ['auto', 600], true), [300, 600]);
-  t.deepEqual(eleventyImage.getWidths(300, [150, null], true), [150,300]);
-  t.deepEqual(eleventyImage.getWidths(300, [null, 150], true), [150,300]);
-  t.deepEqual(eleventyImage.getWidths(300, [150, 'auto'], true), [150,300]);
-  t.deepEqual(eleventyImage.getWidths(300, ['auto', 150], true), [150,300]);
+  assert.deepEqual(eleventyImage.getWidths(300, [600, null], true), [300, 600]);
+  assert.deepEqual(eleventyImage.getWidths(300, [null, 600], true), [300, 600]);
+  assert.deepEqual(eleventyImage.getWidths(300, [600, 'auto'], true), [300, 600]);
+  assert.deepEqual(eleventyImage.getWidths(300, ['auto', 600], true), [300, 600]);
+  assert.deepEqual(eleventyImage.getWidths(300, [150, null], true), [150,300]);
+  assert.deepEqual(eleventyImage.getWidths(300, [null, 150], true), [150,300]);
+  assert.deepEqual(eleventyImage.getWidths(300, [150, 'auto'], true), [150,300]);
+  assert.deepEqual(eleventyImage.getWidths(300, ['auto', 150], true), [150,300]);
 });
 
-test("Keep a cache, reuse with same file names and options", async t => {
+test("Keep a cache, reuse with same file names and options", async () => {
   let promise1 = eleventyImage("./test/bio-2017.jpg", { dryRun: true });
   let promise2 = eleventyImage("./test/bio-2017.jpg", { dryRun: true });
-  t.is(promise1, promise2);
+  assert.equal(promise1, promise2);
 
   let stats1 = await promise1;
   let stats2 = await promise2;
-  t.deepEqual(stats1, stats2);
+  assert.deepEqual(stats1, stats2);
 });
 
-test("Keep a cache, reuse even after an image transform is completed (issue #312)", async t => {
+test("Keep a cache, reuse even after an image transform is completed (issue #312)", async () => {
   // await the promises to allow the process to complete, which in issue #312 unexpectedly mutated an object used as a cache key
   let promise1 = await eleventyImage("./test/bio-2017.jpg", { dryRun: true });
   let promise2 = await eleventyImage("./test/bio-2017.jpg", { dryRun: true });
-  t.is(promise1, promise2);
+  assert.equal(promise1, promise2);
 
   let stats1 = await promise1;
   let stats2 = await promise2;
-  t.deepEqual(stats1, stats2);
+  assert.deepEqual(stats1, stats2);
 });
 
-test("Keep a cache, reuse with same remote url and options", async t => {
+test("Keep a cache, reuse with same remote url and options", async () => {
   let promise1 = eleventyImage("https://www.zachleat.com/img/avatar-2017-big.png", { dryRun: true });
   let promise2 = eleventyImage("https://www.zachleat.com/img/avatar-2017-big.png", { dryRun: true });
-  t.is(promise1, promise2);
+  assert.equal(promise1, promise2);
 
   let stats1 = await promise1;
   let stats2 = await promise2;
-  t.deepEqual(stats1, stats2);
+  assert.deepEqual(stats1, stats2);
 });
 
-test("Keep a cache, don’t reuse with same file names and different options", async t => {
+test("Keep a cache, don’t reuse with same file names and different options", async () => {
   let promise1 = eleventyImage("./test/bio-2017.jpg", {
     widths: [null],
     dryRun: true,
@@ -672,17 +671,17 @@ test("Keep a cache, don’t reuse with same file names and different options", a
     widths: [300],
     dryRun: true,
   });
-  t.not(promise1, promise2);
+  assert.notEqual(promise1, promise2);
 
   let stats1 = await promise1;
   let stats2 = await promise2;
-  t.notDeepEqual(stats1, stats2);
+  assert.notDeepEqual(stats1, stats2);
 
-  t.is(stats1.jpeg.length, 1);
-  t.is(stats2.jpeg.length, 1);
+  assert.equal(stats1.jpeg.length, 1);
+  assert.equal(stats2.jpeg.length, 1);
 });
 
-test("Keep a cache, don’t reuse with if the image changes, check promise equality", async t => {
+test("Keep a cache, don’t reuse with if the image changes, check promise equality", async () => {
   fs.copyFileSync("./test/modify-bio-original.jpg", "./test/generated-modify-bio.jpg");
 
   let promise1 = eleventyImage("./test/generated-modify-bio.jpg", {
@@ -695,11 +694,11 @@ test("Keep a cache, don’t reuse with if the image changes, check promise equal
     outputDir: "./test/img/",
   });
 
-  t.not(promise1, promise2);
+  assert.notEqual(promise1, promise2);
 });
 
 let method = os.platform() === "win32" && process.env.GITHUB_ACTIONS ? test.skip : test;
-method("Keep a cache, don’t reuse with if the image changes, check output", async t => {
+method("Keep a cache, don’t reuse with if the image changes, check output", async () => {
   let outputPathTemp = "./test/generated-modify2-bio.jpg";
 
   fs.copyFileSync("./test/modify2-bio-original.jpg", outputPathTemp);
@@ -714,83 +713,83 @@ method("Keep a cache, don’t reuse with if the image changes, check output", as
     outputDir: "./test/img/",
   });
 
-  t.notDeepEqual(stats1, stats2);
+  assert.notDeepEqual(stats1, stats2);
 
-  t.is(stats1.jpeg.length, 1);
-  t.is(stats2.jpeg.length, 1);
+  assert.equal(stats1.jpeg.length, 1);
+  assert.equal(stats2.jpeg.length, 1);
 });
 
-test("SVG to Buffer input! Issue #40", async t => {
+test("SVG to Buffer input! Issue #40", async () => {
   let svgContent = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" x="0" y="0" viewBox="0 0 1569.4 2186" xml:space="preserve" aria-hidden="true" focusable="false"><style>.st0{fill:#fff;stroke:#fff;stroke-width:28;stroke-miterlimit:10}</style><g><path class="st0" d="M562.2 1410.1c-9 0-13.5-12-13.5-36.1V778.9c0-11.5-2.3-16.9-7-16.2-28.4 7.2-42.7 10.8-43.1 10.8-7.9.7-11.8-7.2-11.8-23.7v-51.7c0-14.3 4.3-22.4 12.9-24.2l142.2-36.6c1.1-.3 2.7-.5 4.8-.5 7.9 0 11.8 8.4 11.8 25.3v712c0 24.1-4.7 36.1-14 36.1l-82.3-.1zM930.5 1411.2c-14.4 0-26.8-1-37.4-3-10.6-2-21.6-6.5-33.1-13.5s-20.9-16.6-28.3-28.8-13.4-29.3-18-51.2-7-47.9-7-78.1V960.4c0-7.2-2-10.8-5.9-10.8h-33.4c-9 0-13.5-8.6-13.5-25.8v-29.1c0-17.6 4.5-26.4 13.5-26.4h33.4c3.9 0 5.9-4.8 5.9-14.5l9.7-209.5c1.1-19 5.7-28.5 14-28.5h53.9c9 0 13.5 9.5 13.5 28.5v209.5c0 9.7 2.1 14.5 6.5 14.5H973c9 0 13.5 8.8 13.5 26.4v29.1c0 17.2-4.5 25.8-13.5 25.8h-68.9c-2.5 0-4.2.6-5.1 1.9-.9 1.2-1.3 4.2-1.3 8.9v277.9c0 20.8 1.3 38.2 4 52s6.6 24 11.8 30.4 10.4 10.8 15.6 12.9c5.2 2.2 11.6 3.2 19.1 3.2h38.2c9.7 0 14.5 6.7 14.5 19.9v32.3c0 14.7-5.2 22.1-15.6 22.1l-54.8.1zM1137.2 1475.8c8.2 0 15.4-6.7 21.5-20.2s9.2-32.6 9.2-57.4c0-5.8-3.6-25.7-10.8-59.8l-105.6-438.9c-.7-5-1.1-9-1.1-11.9 0-12.9 2.7-19.4 8.1-19.4h65.2c5 0 9.1 1.7 12.4 5.1s5.8 10.3 7.5 20.7l70 370.5c1.4 4.3 2.3 6.5 2.7 6.5 1.4 0 2.2-2 2.2-5.9l54.9-369.5c1.4-10.8 3.7-18 6.7-21.8s6.9-5.7 11.6-5.7h45.2c6.1 0 9.2 7 9.2 21 0 3.2-.4 7.4-1.1 12.4l-95.9 499.3c-7.5 41.3-15.8 72.9-24.8 94.8s-19 36.8-30.2 44.7c-11.1 7.9-25.8 12-44.2 12.4h-5.4c-29.1 0-48.8-7.7-59.2-23.2-2.9-3.2-4.3-11.5-4.3-24.8 0-26.6 4.3-39.9 12.9-39.9.7 0 7.2 1.8 19.4 5.4 12.4 3.8 20.3 5.6 23.9 5.6z"/><g><path class="st0" d="M291.2 1411.1c-9 0-13.5-12-13.5-36.1V779.9c0-11.5-2.3-16.9-7-16.2-28.4 7.2-42.7 10.8-43.1 10.8-7.9.7-11.8-7.2-11.8-23.7v-51.7c0-14.3 4.3-22.4 12.9-24.2L371 638.2c1.1-.3 2.7-.5 4.8-.5 7.9 0 11.8 8.4 11.8 25.3v712c0 24.1-4.7 36.1-14 36.1h-82.4z"/></g></g></svg>`;
   let output = await eleventyImage(Buffer.from(svgContent), {
     outputDir: "./test/img/"
   });
 
-  t.is(output.jpeg.length, 1);
-  t.is(output.webp.length, 1);
+  assert.equal(output.jpeg.length, 1);
+  assert.equal(output.webp.length, 1);
 
-  t.is(output.jpeg[0].width, 1569);
-  t.is(output.webp[0].width, 1569);
+  assert.equal(output.jpeg[0].width, 1569);
+  assert.equal(output.webp[0].width, 1569);
 });
 
-test("Dryrun should include the buffer instance", async t => {
+test("Dryrun should include the buffer instance", async () => {
   let result = await eleventyImage("./test/bio-2017.jpg", { dryRun: true });
 
-  t.truthy(result.jpeg[0].buffer);
-  t.truthy(result.webp[0].buffer);
+  assert.ok(result.jpeg[0].buffer);
+  assert.ok(result.webp[0].buffer);
 });
 
 // TODO dryrun buffer with a remote image?
 
 
-test("Test with a string width", async t => {
+test("Test with a string width", async () => {
   let image = await eleventyImage("./test/bio-2017.jpg", {
     widths: ["340"],
     formats: [null],
     dryRun: true,
   });
 
-  t.deepEqual(image.jpeg[0].width, 340);
+  assert.deepEqual(image.jpeg[0].width, 340);
 });
 
-test("Test with a string px width", async t => {
+test("Test with a string px width", async () => {
   let image = await eleventyImage("./test/bio-2017.jpg", {
     widths: ["340px"],
     formats: [null],
     dryRun: true,
   });
 
-  t.deepEqual(image.jpeg[0].width, 340);
+  assert.deepEqual(image.jpeg[0].width, 340);
 });
 
-test("Test with a string float width", async t => {
+test("Test with a string float width", async () => {
   let image = await eleventyImage("./test/bio-2017.jpg", {
     widths: ["340.9"],
     formats: [null],
     dryRun: true,
   });
 
-  t.deepEqual(image.jpeg[0].width, 340);
+  assert.deepEqual(image.jpeg[0].width, 340);
 });
 
-test("Test with 'auto' width", async t => {
+test("Test with 'auto' width", async () => {
   let image = await eleventyImage("./test/bio-2017.jpg", {
     widths: ['auto'],
     formats: [null],
     dryRun: true,
   });
 
-  t.deepEqual(image.jpeg[0].width, 1280);
-  t.deepEqual(image.jpeg[0].height, 853);
+  assert.deepEqual(image.jpeg[0].width, 1280);
+  assert.deepEqual(image.jpeg[0].height, 853);
 });
 
-test("Using `jpg` in formats Issue #64", async t => {
+test("Using `jpg` in formats Issue #64", async () => {
   let stats = await eleventyImage("./test/bio-2017.jpg", {
     formats: ["jpg"],
     dryRun: true,
   });
   delete stats.jpeg[0].buffer;
-  t.deepEqual(stats, {
+  assert.deepEqual(stats, {
     jpeg: [
       {
         filename: 'KkPMmHd3hP-1280.jpeg',
@@ -807,17 +806,17 @@ test("Using `jpg` in formats Issue #64", async t => {
   });
 });
 
-test("SVG files and dryRun: Issue #72", async t => {
+test("SVG files and dryRun: Issue #72", async () => {
   let stats = await eleventyImage("./test/Ghostscript_Tiger.svg", {
     formats: ["svg"],
     dryRun: true,
   });
-  t.false(fs.existsSync("./img/8b4d670b-900.svg"));
-  t.truthy(stats.svg[0]);
+  assert.equal(fs.existsSync("./img/8b4d670b-900.svg"), false);
+  assert.ok(stats.svg[0]);
 });
 
-test("Sorted object keys", async t => {
-  t.deepEqual(Util.getSortedObject({
+test("Sorted object keys", async () => {
+  assert.deepEqual(Util.getSortedObject({
     c: 3,
     b: 2,
     a: 1
@@ -827,7 +826,7 @@ test("Sorted object keys", async t => {
     c: 3
   });
 
-  t.deepEqual(Util.getSortedObject({
+  assert.deepEqual(Util.getSortedObject({
     b: 2,
     a: 1,
     1: 3,
@@ -838,24 +837,24 @@ test("Sorted object keys", async t => {
   });
 });
 
-test("normalizeImageSource decodes HTML entities in an HTML `src` #307", t => {
+test("normalizeImageSource decodes HTML entities in an HTML `src` #307", () => {
   // A file named `rose&rose.jpg` is written into HTML as `rose&amp;rose.jpg`.
   // When reading it back out of the built HTML we must decode the entity so the
   // resolved path points at the real file on disk.
-  t.is(Util.normalizeImageSource({ input: "src", inputPath: "src/index.html" }, "rose&amp;rose.jpg", {
+  assert.equal(Util.normalizeImageSource({ input: "src", inputPath: "src/index.html" }, "rose&amp;rose.jpg", {
     isViaHtml: true,
   }), path.join("src", "rose&rose.jpg"));
 
   // Numeric entities decode too.
-  t.is(Util.normalizeImageSource({ input: "src", inputPath: "src/index.html" }, "rose&#38;rose.jpg", {
+  assert.equal(Util.normalizeImageSource({ input: "src", inputPath: "src/index.html" }, "rose&#38;rose.jpg", {
     isViaHtml: true,
   }), path.join("src", "rose&rose.jpg"));
 
   // Without the isViaHtml flag the value is not entity-decoded.
-  t.is(Util.normalizeImageSource({ input: "src", inputPath: "src/index.html" }, "rose&rose.jpg"), path.join("src", "rose&rose.jpg"));
+  assert.equal(Util.normalizeImageSource({ input: "src", inputPath: "src/index.html" }, "rose&rose.jpg"), path.join("src", "rose&rose.jpg"));
 });
 
-test("widths array should be ignored in hashing", async t => {
+test("widths array should be ignored in hashing", async () => {
   let stats = await eleventyImage("./test/bio-2017.jpg", {
     statsOnly: true,
     widths: [1280]
@@ -866,12 +865,12 @@ test("widths array should be ignored in hashing", async t => {
     widths: [300, 600]
   });
 
-  t.is(stats.jpeg[0].url, "/img/KkPMmHd3hP-1280.jpeg");
-  t.is(stats2.jpeg[0].url, "/img/KkPMmHd3hP-300.jpeg");
-  t.is(stats2.jpeg[1].url, "/img/KkPMmHd3hP-600.jpeg");
+  assert.equal(stats.jpeg[0].url, "/img/KkPMmHd3hP-1280.jpeg");
+  assert.equal(stats2.jpeg[0].url, "/img/KkPMmHd3hP-300.jpeg");
+  assert.equal(stats2.jpeg[1].url, "/img/KkPMmHd3hP-600.jpeg");
 });
 
-test("statsOnly and eleventyImage output comparison", async t => {
+test("statsOnly and eleventyImage output comparison", async () => {
   let statsOnly = await eleventyImage("./test/bio-2017.jpg", {
     statsOnly: true,
     widths: [399],
@@ -887,10 +886,10 @@ test("statsOnly and eleventyImage output comparison", async t => {
   delete stats.jpeg[0].buffer;
   delete stats.jpeg[0].size;
 
-  t.deepEqual(statsOnly, stats);
+  assert.deepEqual(statsOnly, stats);
 });
 
-test("urlFormat using local image", async t => {
+test("urlFormat using local image", async () => {
   let stats = await eleventyImage("./test/bio-2017.jpg", {
     formats: ["auto"],
     urlFormat: function({ src }) {
@@ -899,35 +898,35 @@ test("urlFormat using local image", async t => {
     }
   });
 
-  t.truthy(stats);
-  t.truthy(stats.jpeg.length);
-  t.truthy(stats.jpeg[0].buffer);
-  t.truthy(stats.jpeg[0].size);
+  assert.ok(stats);
+  assert.ok(stats.jpeg.length);
+  assert.ok(stats.jpeg[0].buffer);
+  assert.ok(stats.jpeg[0].size);
 
-  t.is(stats.jpeg[0].width, 1280);
-  t.is(stats.jpeg[0].height, 853);
-  t.is(stats.jpeg[0].url, "https://v1.image.11ty.dev/https%3A%2F%2Fwww.zachleat.com%2Ftest%2Fbio-2017.jpg/");
+  assert.equal(stats.jpeg[0].width, 1280);
+  assert.equal(stats.jpeg[0].height, 853);
+  assert.equal(stats.jpeg[0].url, "https://v1.image.11ty.dev/https%3A%2F%2Fwww.zachleat.com%2Ftest%2Fbio-2017.jpg/");
 });
 
-test("urlFormat using remote image", async t => {
+test("urlFormat using remote image", async () => {
   let stats = await eleventyImage("https://www.zachleat.com/img/avatar-2017.png", {
     formats: ["auto"],
     urlFormat: function({ src }) {
       return `https://v1.image.11ty.dev/${encodeURIComponent(src)}/`;
     }
   });
-  t.truthy(stats);
-  t.truthy(stats.png.length);
-  t.truthy(stats.png[0].buffer);
-  t.truthy(stats.png[0].size);
+  assert.ok(stats);
+  assert.ok(stats.png.length);
+  assert.ok(stats.png[0].buffer);
+  assert.ok(stats.png[0].size);
 
-  t.is(stats.png[0].width, 160);
-  t.is(stats.png[0].height, 160);
-  t.is(stats.png[0].url, "https://v1.image.11ty.dev/https%3A%2F%2Fwww.zachleat.com%2Fimg%2Favatar-2017.png/");
+  assert.equal(stats.png[0].width, 160);
+  assert.equal(stats.png[0].height, 160);
+  assert.equal(stats.png[0].url, "https://v1.image.11ty.dev/https%3A%2F%2Fwww.zachleat.com%2Fimg%2Favatar-2017.png/");
 });
 
 
-test("statsOnly using local image", async t => {
+test("statsOnly using local image", async () => {
   let stats = await eleventyImage("./test/bio-2017.jpg", {
     statsOnly: true,
     formats: ["auto"],
@@ -937,7 +936,7 @@ test("statsOnly using local image", async t => {
     }
   });
 
-  t.deepEqual(stats, {
+  assert.deepEqual(stats, {
     jpeg: [
       {
         format: 'jpeg',
@@ -951,7 +950,7 @@ test("statsOnly using local image", async t => {
   });
 });
 
-test("statsOnly using remote image", async t => {
+test("statsOnly using remote image", async () => {
   let stats = await eleventyImage("https://www.zachleat.com/img/avatar-2017.png", {
     statsOnly: true,
     remoteImageMetadata: {
@@ -964,7 +963,7 @@ test("statsOnly using remote image", async t => {
       return `https://v1.image.11ty.dev/${encodeURIComponent(src)}/`;
     }
   });
-  t.deepEqual(stats, {
+  assert.deepEqual(stats, {
     png: [
       {
         format: 'png',
@@ -979,7 +978,7 @@ test("statsOnly using remote image", async t => {
 });
 
 
-test("statsOnly using local image, no urlFormat", async t => {
+test("statsOnly using local image, no urlFormat", async () => {
   let stats = await eleventyImage("./test/bio-2017.jpg", {
     statsOnly: true,
     formats: ["auto"],
@@ -989,13 +988,13 @@ test("statsOnly using local image, no urlFormat", async t => {
   });
 
   // No buffer
-  t.truthy(stats.jpeg[0]);
-  t.falsy(stats.jpeg[0].buffer);
+  assert.ok(stats.jpeg[0]);
+  assert.ok(!(stats.jpeg[0].buffer));
 
   // make sure it doesn’t exist.
-  t.true(!fs.existsSync(stats.jpeg[0].outputPath));
+  assert.equal(!fs.existsSync(stats.jpeg[0].outputPath), true);
 
-  t.deepEqual(stats, {
+  assert.deepEqual(stats, {
     jpeg: [
       {
         format: 'jpeg',
@@ -1011,7 +1010,7 @@ test("statsOnly using local image, no urlFormat", async t => {
   });
 });
 
-test("statsOnly using remote image, no urlFormat", async t => {
+test("statsOnly using remote image, no urlFormat", async () => {
   let stats = await eleventyImage("https://www.zachleat.com/img/avatar-2017.png", {
     statsOnly: true,
     remoteImageMetadata: {
@@ -1026,13 +1025,13 @@ test("statsOnly using remote image, no urlFormat", async t => {
   });
 
   // No buffer
-  t.truthy(stats.png[0]);
-  t.falsy(stats.png[0].buffer);
+  assert.ok(stats.png[0]);
+  assert.ok(!(stats.png[0].buffer));
 
   // make sure it doesn’t exist.
-  t.true(!fs.existsSync(stats.png[0].outputPath));
+  assert.equal(!fs.existsSync(stats.png[0].outputPath), true);
 
-  t.deepEqual(stats, {
+  assert.deepEqual(stats, {
     png: [
       {
         format: 'png',
@@ -1048,31 +1047,31 @@ test("statsOnly using remote image, no urlFormat", async t => {
   });
 });
 
-test("src is recognized as local when using absolute path on Windows", t => {
+test("src is recognized as local when using absolute path on Windows", () => {
   let image = new Image("C:\\image.jpg");
 
-  t.is(image.isRemoteUrl, false);
+  assert.equal(image.isRemoteUrl, false);
 });
 
-test("src is recognized as local when using absolute path on POSIX", t => {
+test("src is recognized as local when using absolute path on POSIX", () => {
   let image = new Image("/home/user/image.jpg");
 
-  t.is(image.isRemoteUrl, false);
+  assert.equal(image.isRemoteUrl, false);
 });
 
-test("src is recognized as remote when using https scheme", t => {
+test("src is recognized as remote when using https scheme", () => {
   let image = new Image("https://example.com/image.jpg");
 
-  t.is(image.isRemoteUrl, true);
+  assert.equal(image.isRemoteUrl, true);
 });
 
-test("src is recognized as remote when using http scheme", t => {
+test("src is recognized as remote when using http scheme", () => {
   let image = new Image("http://example.com/image.jpg");
 
-  t.is(image.isRemoteUrl, true);
+  assert.equal(image.isRemoteUrl, true);
 });
 
-test("Maintains orientation #132", async t => {
+test("Maintains orientation #132", async () => {
   let stats = await eleventyImage("./test/orientation.jpg", {
     // upscaling rules apply:
     //  even though the image is 76px wide and has exif width: 151,
@@ -1083,13 +1082,13 @@ test("Maintains orientation #132", async t => {
     dryRun: true,
   });
 
-  t.is(stats.jpeg.length, 1);
-  t.is(stats.jpeg[0].width, 76);
-  t.is(stats.jpeg[0].height, 151);
+  assert.equal(stats.jpeg.length, 1);
+  assert.equal(stats.jpeg[0].width, 76);
+  assert.equal(stats.jpeg[0].height, 151);
 });
 
 // Broken test cases from https://github.com/recurser/exif-orientation-examples
-test("#158: Test EXIF orientation data landscape (3) with fixOrientation", async t => {
+test("#158: Test EXIF orientation data landscape (3) with fixOrientation", async () => {
   let stats = await eleventyImage("./test/exif-Landscape_3.jpg", {
     widths: [600, "auto"],
     formats: ['auto'],
@@ -1098,11 +1097,11 @@ test("#158: Test EXIF orientation data landscape (3) with fixOrientation", async
     fixOrientation: true,
   });
 
-  t.is(stats.jpeg.length, 2);
-  t.is(stats.jpeg[0].width, 600);
-  t.is(Math.floor(stats.jpeg[0].height), 400);
-  t.is(stats.jpeg[1].width, 1800);
-  t.is(stats.jpeg[1].height, 1200);
+  assert.equal(stats.jpeg.length, 2);
+  assert.equal(stats.jpeg[0].width, 600);
+  assert.equal(Math.floor(stats.jpeg[0].height), 400);
+  assert.equal(stats.jpeg[1].width, 1800);
+  assert.equal(stats.jpeg[1].height, 1200);
 
   // This orientation (180º rotation) preserves image dimensions and requires an image diff
   const readToRaw = async input => {
@@ -1114,11 +1113,11 @@ test("#158: Test EXIF orientation data landscape (3) with fixOrientation", async
     ["./test/exif-Landscape_3-bakedOrientation.jpg", stats.jpeg[1]]]) {
     const inRaw = await readToRaw(inSrc);
     const outRaw = await readToRaw(outStat.buffer);
-    t.is(pixelmatch(inRaw, outRaw, null, outStat.width, outStat.height, { threshold: 0.15 }), 0);
+    assert.equal(pixelmatch(inRaw, outRaw, null, outStat.width, outStat.height, { threshold: 0.15 }), 0);
   }
 });
 
-test("#158: Test EXIF orientation data landscape (3) without fixOrientation", async t => {
+test("#158: Test EXIF orientation data landscape (3) without fixOrientation", async () => {
   let stats = await eleventyImage("./test/exif-Landscape_3.jpg", {
     widths: [200, "auto"],
     formats: ['auto'],
@@ -1140,11 +1139,11 @@ test("#158: Test EXIF orientation data landscape (3) without fixOrientation", as
 
     // rotation did not happen and the images are different
     // when/if fixOrientation is defaulted to true this test will have to be === 0
-    t.true(pixelmatch(inRaw, outRaw, null, outStat.width, outStat.height, { threshold: 0.15 }) > 0);
+    assert.equal(pixelmatch(inRaw, outRaw, null, outStat.width, outStat.height, { threshold: 0.15 }) > 0, true);
   }
 });
 
-test("#132: Test EXIF orientation data landscape (5)", async t => {
+test("#132: Test EXIF orientation data landscape (5)", async () => {
   let stats = await eleventyImage("./test/exif-Landscape_5.jpg", {
     widths: [400, "auto"],
     formats: ['auto'],
@@ -1152,14 +1151,14 @@ test("#132: Test EXIF orientation data landscape (5)", async t => {
     dryRun: true,
   });
 
-  t.is(stats.jpeg.length, 2);
-  t.is(stats.jpeg[0].width, 400);
-  t.is(stats.jpeg[1].width, 1800);
-  t.is(Math.floor(stats.jpeg[0].height), 266);
-  t.is(stats.jpeg[1].height, 1200);
+  assert.equal(stats.jpeg.length, 2);
+  assert.equal(stats.jpeg[0].width, 400);
+  assert.equal(stats.jpeg[1].width, 1800);
+  assert.equal(Math.floor(stats.jpeg[0].height), 266);
+  assert.equal(stats.jpeg[1].height, 1200);
 });
 
-test("#132: Test EXIF orientation data landscape (6)", async t => {
+test("#132: Test EXIF orientation data landscape (6)", async () => {
   let stats = await eleventyImage("./test/exif-Landscape_6.jpg", {
     widths: [400],
     formats: ['auto'],
@@ -1167,12 +1166,12 @@ test("#132: Test EXIF orientation data landscape (6)", async t => {
     dryRun: true,
   });
 
-  t.is(stats.jpeg.length, 1);
-  t.is(stats.jpeg[0].width, 400);
-  t.is(Math.floor(stats.jpeg[0].height), 266);
+  assert.equal(stats.jpeg.length, 1);
+  assert.equal(stats.jpeg[0].width, 400);
+  assert.equal(Math.floor(stats.jpeg[0].height), 266);
 });
 
-test("#132: Test EXIF orientation data landscape (7)", async t => {
+test("#132: Test EXIF orientation data landscape (7)", async () => {
   let stats = await eleventyImage("./test/exif-Landscape_7.jpg", {
     widths: [400],
     formats: ['auto'],
@@ -1180,12 +1179,12 @@ test("#132: Test EXIF orientation data landscape (7)", async t => {
     dryRun: true,
   });
 
-  t.is(stats.jpeg.length, 1);
-  t.is(stats.jpeg[0].width, 400);
-  t.is(Math.floor(stats.jpeg[0].height), 266);
+  assert.equal(stats.jpeg.length, 1);
+  assert.equal(stats.jpeg[0].width, 400);
+  assert.equal(Math.floor(stats.jpeg[0].height), 266);
 });
 
-test("#132: Test EXIF orientation data landscape (8)", async t => {
+test("#132: Test EXIF orientation data landscape (8)", async () => {
   let stats = await eleventyImage("./test/exif-Landscape_8.jpg", {
     widths: [400],
     formats: ['auto'],
@@ -1193,12 +1192,12 @@ test("#132: Test EXIF orientation data landscape (8)", async t => {
     dryRun: true,
   });
 
-  t.is(stats.jpeg.length, 1);
-  t.is(stats.jpeg[0].width, 400);
-  t.is(Math.floor(stats.jpeg[0].height), 266);
+  assert.equal(stats.jpeg.length, 1);
+  assert.equal(stats.jpeg[0].width, 400);
+  assert.equal(Math.floor(stats.jpeg[0].height), 266);
 });
 
-test("#158: Test EXIF orientation data landscape (15) without fixOrientation", async t => {
+test("#158: Test EXIF orientation data landscape (15) without fixOrientation", async () => {
   let stats = await eleventyImage("./test/exif-Landscape_15.jpg", {
     widths: [400],
     formats: ['auto'],
@@ -1206,13 +1205,13 @@ test("#158: Test EXIF orientation data landscape (15) without fixOrientation", a
     dryRun: true,
   });
 
-  t.is(stats.jpeg.length, 1);
-  t.is(stats.jpeg[0].width, 400);
-  t.is(Math.floor(stats.jpeg[0].height), 266);
+  assert.equal(stats.jpeg.length, 1);
+  assert.equal(stats.jpeg[0].width, 400);
+  assert.equal(Math.floor(stats.jpeg[0].height), 266);
 });
 
 
-test("#158: Test EXIF orientation data landscape (15) with fixOrientation", async t => {
+test("#158: Test EXIF orientation data landscape (15) with fixOrientation", async () => {
   let stats = await eleventyImage("./test/exif-Landscape_15.jpg", {
     widths: [400],
     formats: ['auto'],
@@ -1221,12 +1220,12 @@ test("#158: Test EXIF orientation data landscape (15) with fixOrientation", asyn
     fixOrientation: true,
   });
 
-  t.is(stats.jpeg.length, 1);
-  t.is(stats.jpeg[0].width, 400);
-  t.is(Math.floor(stats.jpeg[0].height), 266);
+  assert.equal(stats.jpeg.length, 1);
+  assert.equal(stats.jpeg[0].width, 400);
+  assert.equal(Math.floor(stats.jpeg[0].height), 266);
 });
 
-test("Animated gif", async t => {
+test("Animated gif", async () => {
   let stats = await eleventyImage("./test/earth-animated.gif", {
     dryRun: true,
     formats: ["auto"],
@@ -1237,14 +1236,14 @@ test("Animated gif", async t => {
     outputDir: "./test/img/",
   });
 
-  t.is(stats.gif.length, 1);
-  t.is(stats.gif[0].width, 400);
-  t.is(stats.gif[0].height, 400);
+  assert.equal(stats.gif.length, 1);
+  assert.equal(stats.gif[0].width, 400);
+  assert.equal(stats.gif[0].height, 400);
   // it’s a big boi
-  t.true( stats.gif[0].size > 1000*999 );
+  assert.equal( stats.gif[0].size > 1000*999 , true);
 });
 
-test("Animated gif format filtering (no good ones)", async t => {
+test("Animated gif format filtering (no good ones)", async () => {
   let stats = await eleventyImage("./test/earth-animated.gif", {
     dryRun: true,
     formats: ["jpeg"],
@@ -1254,15 +1253,15 @@ test("Animated gif format filtering (no good ones)", async t => {
     useCache: false,
   });
 
-  t.deepEqual(Object.keys(stats), ["jpeg"]);
-  t.is(stats.jpeg.length, 1);
-  t.is(stats.jpeg[0].width, 400);
-  t.is(stats.jpeg[0].height, 400);
+  assert.deepEqual(Object.keys(stats), ["jpeg"]);
+  assert.equal(stats.jpeg.length, 1);
+  assert.equal(stats.jpeg[0].width, 400);
+  assert.equal(stats.jpeg[0].height, 400);
   // it’s a big boi
-  t.true( stats.jpeg[0].size < 1000*999, `${stats.jpeg[0].size} size is too big, should be smaller than ${1000*999}.` );
+  assert.equal( stats.jpeg[0].size < 1000*999, true, `${stats.jpeg[0].size} size is too big, should be smaller than ${1000*999}.` );
 });
 
-test("Animated gif format filtering (one valid one)", async t => {
+test("Animated gif format filtering (one valid one)", async () => {
   let stats = await eleventyImage("./test/earth-animated.gif", {
     dryRun: true,
     formats: ["jpeg", "gif"],
@@ -1272,15 +1271,15 @@ test("Animated gif format filtering (one valid one)", async t => {
     useCache: false,
   });
 
-  t.deepEqual(Object.keys(stats), ["gif"]);
-  t.is(stats.gif.length, 1);
-  t.is(stats.gif[0].width, 400);
-  t.is(stats.gif[0].height, 400);
+  assert.deepEqual(Object.keys(stats), ["gif"]);
+  assert.equal(stats.gif.length, 1);
+  assert.equal(stats.gif[0].width, 400);
+  assert.equal(stats.gif[0].height, 400);
   // it’s a big boi
-  t.true( stats.gif[0].size > 1000*999 );
+  assert.equal( stats.gif[0].size > 1000*999 , true);
 });
 
-test("Animated gif to animated webp", async t => {
+test("Animated gif to animated webp", async () => {
   let stats = await eleventyImage("./test/earth-animated.gif", {
     dryRun: true,
     formats: ["webp"],
@@ -1290,38 +1289,38 @@ test("Animated gif to animated webp", async t => {
     useCache: false,
   });
 
-  t.is(stats.webp.length, 1);
-  t.is(stats.webp[0].width, 400);
+  assert.equal(stats.webp.length, 1);
+  assert.equal(stats.webp[0].width, 400);
   // `pageHeight`, not the sum of every frame’s height
-  t.is(stats.webp[0].height, 400);
+  assert.equal(stats.webp[0].height, 400);
 
   // all of the frames survived the gif->webp conversion
   let metadata = await sharp(stats.webp[0].buffer).metadata();
-  t.is(metadata.format, "webp");
-  t.is(metadata.pages, 44);
+  assert.equal(metadata.format, "webp");
+  assert.equal(metadata.pages, 44);
 
   // still a healthy win over the ~1MB source gif
-  t.true( stats.webp[0].size < 1000*999, `${stats.webp[0].size} size is too big, should be smaller than ${1000*999}.` );
+  assert.equal( stats.webp[0].size < 1000*999, true, `${stats.webp[0].size} size is too big, should be smaller than ${1000*999}.` );
 });
 
-test("Animated gif to webp without `sharpOptions.animated` is a single frame", async t => {
+test("Animated gif to webp without `sharpOptions.animated` is a single frame", async () => {
   let stats = await eleventyImage("./test/earth-animated.gif", {
     dryRun: true,
     formats: ["webp"],
     useCache: false,
   });
 
-  t.is(stats.webp.length, 1);
-  t.is(stats.webp[0].width, 400);
-  t.is(stats.webp[0].height, 400);
+  assert.equal(stats.webp.length, 1);
+  assert.equal(stats.webp[0].width, 400);
+  assert.equal(stats.webp[0].height, 400);
 
   // sharp omits `pages` entirely for a still image
   let metadata = await sharp(stats.webp[0].buffer).metadata();
-  t.is(metadata.format, "webp");
-  t.is(metadata.pages, undefined);
+  assert.equal(metadata.format, "webp");
+  assert.equal(metadata.pages, undefined);
 });
 
-test("Animated gif format filtering (webp is animation-friendly)", async t => {
+test("Animated gif format filtering (webp is animation-friendly)", async () => {
   let stats = await eleventyImage("./test/earth-animated.gif", {
     dryRun: true,
     formats: ["jpeg", "webp"],
@@ -1332,14 +1331,14 @@ test("Animated gif format filtering (webp is animation-friendly)", async t => {
   });
 
   // jpeg can’t animate, so it is filtered out of the output formats
-  t.deepEqual(Object.keys(stats), ["webp"]);
-  t.is(stats.webp.length, 1);
+  assert.deepEqual(Object.keys(stats), ["webp"]);
+  assert.equal(stats.webp.length, 1);
 
   let metadata = await sharp(stats.webp[0].buffer).metadata();
-  t.is(metadata.pages, 44);
+  assert.equal(metadata.pages, 44);
 });
 
-test("Change hashLength", async t => {
+test("Change hashLength", async () => {
   let stats = await eleventyImage("./test/bio-2017.jpg", {
     widths: [null],
     hashLength: 6,
@@ -1347,21 +1346,21 @@ test("Change hashLength", async t => {
     dryRun: true,
   });
 
-  t.is(stats.jpeg.length, 1);
-  t.is(stats.jpeg[0].outputPath, path.join("img/KkPMmH-1280.jpeg"));
+  assert.equal(stats.jpeg.length, 1);
+  assert.equal(stats.jpeg[0].outputPath, path.join("img/KkPMmH-1280.jpeg"));
 });
 
-test("Remote image with dryRun should have a buffer property", async t => {
+test("Remote image with dryRun should have a buffer property", async () => {
   let stats = await eleventyImage("https://www.zachleat.com/img/avatar-2017.png", {
     dryRun: true,
     widths: ["auto"],
     formats: ["auto"],
   });
 
-  t.truthy(stats.png[0].buffer);
+  assert.ok(stats.png[0].buffer);
 });
 
-test("Remote image with dryRun should have a buffer property, useCache: false", async t => {
+test("Remote image with dryRun should have a buffer property, useCache: false", async () => {
   let stats = await eleventyImage("https://www.zachleat.com/img/avatar-2017.png", {
     dryRun: true,
     useCache: false,
@@ -1369,10 +1368,10 @@ test("Remote image with dryRun should have a buffer property, useCache: false", 
     formats: ["auto"],
   });
 
-  t.truthy(stats.png[0].buffer);
+  assert.ok(stats.png[0].buffer);
 });
 
-test("SVG files svgShortCircuit based on file size", async t => {
+test("SVG files svgShortCircuit based on file size", async () => {
   let stats = await eleventyImage("./test/Ghostscript_Tiger.svg", {
     formats: ["svg", "webp"],
     widths: [100, 1000, 1100],
@@ -1380,22 +1379,22 @@ test("SVG files svgShortCircuit based on file size", async t => {
     svgShortCircuit: "size",
   });
 
-  t.deepEqual(Object.keys(stats), ["svg", "webp"]);
+  assert.deepEqual(Object.keys(stats), ["svg", "webp"]);
 
-  t.is(stats.svg.length, 1);
+  assert.equal(stats.svg.length, 1);
 
-  t.is(stats.webp.length, 2);
-  t.is(stats.webp.filter(entry => entry.format === "svg").length, 1);
+  assert.equal(stats.webp.length, 2);
+  assert.equal(stats.webp.filter(entry => entry.format === "svg").length, 1);
 
-  t.is(stats.webp[0].format, "webp");
-  t.is(stats.webp[0].width, 100);
-  t.truthy(stats.webp[0].size < 20000);
+  assert.equal(stats.webp[0].format, "webp");
+  assert.equal(stats.webp[0].width, 100);
+  assert.ok(stats.webp[0].size < 20000);
 
-  t.is(stats.webp[1].format, "svg");
-  t.is(stats.webp[1].width, 900);
+  assert.equal(stats.webp[1].format, "svg");
+  assert.equal(stats.webp[1].width, 900);
 });
 
-test("SVG files svgShortCircuit based on file size (small SVG, exclusively SVG output)", async t => {
+test("SVG files svgShortCircuit based on file size (small SVG, exclusively SVG output)", async () => {
   let stats = await eleventyImage("./test/logo.svg", {
     formats: ["svg", "webp"],
     widths: [500],
@@ -1403,14 +1402,14 @@ test("SVG files svgShortCircuit based on file size (small SVG, exclusively SVG o
     svgShortCircuit: "size",
   });
 
-  t.deepEqual(Object.keys(stats), ["svg", "webp"]);
+  assert.deepEqual(Object.keys(stats), ["svg", "webp"]);
 
-  t.is(stats.svg.length, 1);
-  t.is(stats.webp.length, 0);
+  assert.equal(stats.svg.length, 1);
+  assert.equal(stats.webp.length, 0);
 });
 
 
-test("SVG files svgShortCircuit based on file size (brotli compression)", async t => {
+test("SVG files svgShortCircuit based on file size (brotli compression)", async () => {
   let stats = await eleventyImage("./test/Ghostscript_Tiger.svg", {
     formats: ["svg", "webp"],
     widths: [100, 1000, 1100],
@@ -1419,23 +1418,23 @@ test("SVG files svgShortCircuit based on file size (brotli compression)", async 
     svgCompressionSize: "br",
   });
 
-  t.deepEqual(Object.keys(stats), ["svg", "webp"]);
+  assert.deepEqual(Object.keys(stats), ["svg", "webp"]);
 
-  t.is(stats.svg.length, 1);
-  t.true(stats.svg[0].size < 30000); // original was ~68000, br compression was applied.
+  assert.equal(stats.svg.length, 1);
+  assert.equal(stats.svg[0].size < 30000, true); // original was ~68000, br compression was applied.
 
-  t.is(stats.webp.length, 2);
-  t.is(stats.webp.filter(entry => entry.format === "svg").length, 1);
+  assert.equal(stats.webp.length, 2);
+  assert.equal(stats.webp.filter(entry => entry.format === "svg").length, 1);
 
-  t.is(stats.webp[0].format, "webp");
-  t.is(stats.webp[0].width, 100);
-  t.truthy(stats.webp[0].size < 20000);
+  assert.equal(stats.webp[0].format, "webp");
+  assert.equal(stats.webp[0].width, 100);
+  assert.ok(stats.webp[0].size < 20000);
 
-  t.is(stats.webp[1].format, "svg");
-  t.is(stats.webp[1].width, 900);
+  assert.equal(stats.webp[1].format, "svg");
+  assert.equal(stats.webp[1].width, 900);
 });
 
-test("#184: Ensure original size is included if any widths are larger", async t => {
+test("#184: Ensure original size is included if any widths are larger", async () => {
   // Test image is 1280px wide; before PR for 184, asking for [1500, 900] would
   // result in only the 900px image. Now, it should result in 900px *and* 1280px
   // images.
@@ -1445,13 +1444,13 @@ test("#184: Ensure original size is included if any widths are larger", async t 
     dryRun: true,
   });
 
-  t.is(stats.jpeg.length, 2);
-  t.is(stats.jpeg[0].width, 900);
-  t.is(stats.jpeg[1].width, 1280);
+  assert.equal(stats.jpeg.length, 2);
+  assert.equal(stats.jpeg[0].width, 900);
+  assert.equal(stats.jpeg[1].width, 1280);
 });
 
 // https://github.com/lovell/sharp/blob/main/test/fixtures/prophoto.png
-test("Keep ICC Profiles by default #244 test image from Sharp repo", async t => {
+test("Keep ICC Profiles by default #244 test image from Sharp repo", async () => {
   let inputMetadata = await sharp("./test/issue-244-sharp.png").metadata();
 
   let stats = await eleventyImage("./test/issue-244-sharp.png", {
@@ -1464,25 +1463,25 @@ test("Keep ICC Profiles by default #244 test image from Sharp repo", async t => 
   // output buffer has icc profile
   let outputMetadata = await sharp(stats.png[0].buffer).metadata();
 
-  t.true(Buffer.isBuffer(inputMetadata.icc));
-  t.true(inputMetadata.hasProfile);
+  assert.equal(Buffer.isBuffer(inputMetadata.icc), true);
+  assert.equal(inputMetadata.hasProfile, true);
 
-  t.is(stats.png[0].outputPath, path.join("test/img/KmVobkU8Sj-1.png"));
-  t.true(Buffer.isBuffer(outputMetadata.icc));
-  t.true(outputMetadata.hasProfile);
+  assert.equal(stats.png[0].outputPath, path.join("test/img/KmVobkU8Sj-1.png"));
+  assert.equal(Buffer.isBuffer(outputMetadata.icc), true);
+  assert.equal(outputMetadata.hasProfile, true);
 });
 
-test("#105 Transparent format output filtering", async t => {
+test("#105 Transparent format output filtering", async () => {
   let stats = await eleventyImage("./test/david-mascot.png", {
     dryRun: true,
     formats: ["png", "avif", "jpeg"],
     useCache: false,
   });
 
-  t.deepEqual(Object.keys(stats), ["png", "avif"]);
+  assert.deepEqual(Object.keys(stats), ["png", "avif"]);
 });
 
-test("#105 Transparent format output filtering (no minimum transparency formats found)", async t => {
+test("#105 Transparent format output filtering (no minimum transparency formats found)", async () => {
   let stats = await eleventyImage("./test/david-mascot.png", {
     dryRun: true,
     useCache: false,
@@ -1490,10 +1489,10 @@ test("#105 Transparent format output filtering (no minimum transparency formats 
 
   // even though webp is transparency-friendly, we still use the full originally formats because webp is not a sufficiently minimum format for transparency
   // must include one of: svg, png, or gif
-  t.deepEqual(Object.keys(stats), ["webp", "jpeg"]);
+  assert.deepEqual(Object.keys(stats), ["webp", "jpeg"]);
 });
 
-test("#106 Production run should not load the source buffer into memory", async t => {
+test("#106 Production run should not load the source buffer into memory", async () => {
   let src = "./test/bio-2017.jpg";
   let options = {
     widths: [347], // unique width to avoid in-memory cache collisions with other tests
@@ -1504,15 +1503,15 @@ test("#106 Production run should not load the source buffer into memory", async 
   // `Image.create` returns the memoized instance that `eleventyImage` reuses,
   // so we hold a direct reference to the exact instance under test.
   let img = Image.create(src, options);
-  t.is(typeof img.hasInputLoaded, "boolean", "sanity: hasInputLoaded getter should exist");
-  t.false(img.hasInputLoaded, "no source buffer should be loaded before processing");
+  assert.equal(typeof img.hasInputLoaded, "boolean", "sanity: hasInputLoaded getter should exist");
+  assert.equal(img.hasInputLoaded, false, "no source buffer should be loaded before processing");
 
   await eleventyImage(src, options);
 
-  t.false(img.hasInputLoaded, "source buffer should not be loaded for production local files");
+  assert.equal(img.hasInputLoaded, false, "source buffer should not be loaded for production local files");
 });
 
-test("#279 Buffer sources with transformOnRequest use data URIs and write nothing", async t => {
+test("#279 Buffer sources with transformOnRequest use data URIs and write nothing", async () => {
   let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="279" height="10"><rect width="279" height="10"/></svg>`;
   let stats = await eleventyImage(Buffer.from(svg), {
     formats: ["svg", "png"],
@@ -1523,36 +1522,36 @@ test("#279 Buffer sources with transformOnRequest use data URIs and write nothin
 
   for(let format of ["svg", "png"]) {
     let stat = stats[format][0];
-    t.is(stat.url, `data:${stat.sourceType};base64,${stat.buffer.toString("base64")}`);
-    t.is(stat.srcset, `${stat.url} ${stat.width}w`);
+    assert.equal(stat.url, `data:${stat.sourceType};base64,${stat.buffer.toString("base64")}`);
+    assert.equal(stat.srcset, `${stat.url} ${stat.width}w`);
   }
-  t.is(stats.png[0].width, 100);
-  t.false(fs.existsSync("./test/img/279/"));
+  assert.equal(stats.png[0].width, 100);
+  assert.equal(fs.existsSync("./test/img/279/"), false);
 });
 
-test("#70 Base64 data URI input", async t => {
+test("#70 Base64 data URI input", async () => {
   let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="70" height="10"><rect width="70" height="10"/></svg>`;
   let stats = await eleventyImage(`data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`, {
     formats: ["png"],
     dryRun: true,
   });
 
-  t.is(stats.png[0].width, 70);
-  t.is(stats.png[0].height, 10);
+  assert.equal(stats.png[0].width, 70);
+  assert.equal(stats.png[0].height, 10);
 });
 
-test("#70 Percent-encoded data URI input", async t => {
+test("#70 Percent-encoded data URI input", async () => {
   let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="71" height="10"><rect width="71" height="10"/></svg>`;
   let stats = await eleventyImage(`data:image/svg+xml,${encodeURIComponent(svg)}`, {
     formats: ["svg"],
     dryRun: true,
   });
 
-  t.is(stats.svg[0].width, 71);
-  t.is(stats.svg[0].buffer.toString(), svg);
+  assert.equal(stats.svg[0].width, 71);
+  assert.equal(stats.svg[0].buffer.toString(), svg);
 });
 
-test("#70 Raster data URI input", async t => {
+test("#70 Raster data URI input", async () => {
   let jpeg = fs.readFileSync("./test/bio-2017.jpg");
   let stats = await eleventyImage(`data:image/jpeg;base64,${jpeg.toString("base64")}`, {
     formats: ["webp"],
@@ -1560,9 +1559,9 @@ test("#70 Raster data URI input", async t => {
     dryRun: true,
   });
 
-  t.is(stats.webp[0].width, 70);
+  assert.equal(stats.webp[0].width, 70);
 });
 
-test("#70 Invalid data URI input throws", t => {
-  t.throws(() => new Image("data:image/png;base64"), { message: /Invalid data URI/ });
+test("#70 Invalid data URI input throws", () => {
+  assert.throws(() => new Image("data:image/png;base64"), { message: /Invalid data URI/ });
 });

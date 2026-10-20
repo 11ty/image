@@ -30,7 +30,7 @@ _[The full Image utility documentation is on 11ty.dev](https://www.11ty.dev/docs
 npm run test
 ```
 
-- We use the [ava JavaScript test runner](https://github.com/avajs/ava) ([Assertions documentation](https://github.com/avajs/ava/blob/master/docs/03-assertions.md))
+- We use the [Node.js test runner](https://nodejs.org/api/test.html) with [`node:assert/strict`](https://nodejs.org/api/assert.html).
 - ℹ️ To keep tests fast, thou shalt try to avoid writing files in tests.
 
 ## Community Roadmap

@@ -1,9 +1,10 @@
-import test from "ava";
+import test from "node:test";
+import assert from "node:assert/strict";
 import Eleventy from "@11ty/eleventy";
 import { eleventyImageTransformPlugin } from "../img.js";
 import { normalizeEscapedPaths } from "./util/utils.js";
 
-test("Using the transform plugin", async t => {
+test("Using the transform plugin", async () => {
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
       eleventyConfig.addTemplate("virtual.html", `<img src="./bio-2017.jpg" alt="My ugly mug">`);
@@ -16,10 +17,10 @@ test("Using the transform plugin", async t => {
   elev.disableLogger();
 
   let results = await elev.toJSON();
-  t.is(results[0].content, `<picture><source type="image/webp" srcset="/virtual/KkPMmHd3hP-1280.webp"><img src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" width="1280" height="853"></picture>`);
+  assert.equal(results[0].content, `<picture><source type="image/webp" srcset="/virtual/KkPMmHd3hP-1280.webp"><img src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" width="1280" height="853"></picture>`);
 });
 
-test("Using the transform plugin, data URI #238", async t => {
+test("Using the transform plugin, data URI #238", async () => {
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
       eleventyConfig.addTemplate("virtual.html", `<img src="data:image/" alt="My ugly mug">`);
@@ -31,10 +32,10 @@ test("Using the transform plugin, data URI #238", async t => {
   });
 
   let results = await elev.toJSON();
-  t.is(results[0].content, `<img src="data:image/" alt="My ugly mug">`);
+  assert.equal(results[0].content, `<img src="data:image/" alt="My ugly mug">`);
 });
 
-test("Using the transform plugin (override options)", async t => {
+test("Using the transform plugin (override options)", async () => {
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
       eleventyConfig.addTemplate("virtual.html", `<img src="./bio-2017.jpg" alt="My ugly mug">`);
@@ -48,10 +49,10 @@ test("Using the transform plugin (override options)", async t => {
   elev.disableLogger();
 
   let results = await elev.toJSON();
-  t.is(results[0].content, `<img src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" width="1280" height="853">`);
+  assert.equal(results[0].content, `<img src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" width="1280" height="853">`);
 });
 
-test("Using the transform plugin with transform on request during dev mode", async t => {
+test("Using the transform plugin with transform on request during dev mode", async () => {
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
       eleventyConfig.addTemplate("virtual.html", `<img src="./bio-2017.jpg" alt="My ugly mug">`);
@@ -68,10 +69,10 @@ test("Using the transform plugin with transform on request during dev mode", asy
   elev.disableLogger();
 
   let results = await elev.toJSON();
-  t.is(normalizeEscapedPaths(results[0].content), `<img src="/.11ty/image/?src=test%2Fbio-2017.jpg&width=1280&format=jpeg&via=transform" alt="My ugly mug" width="1280" height="853">`);
+  assert.equal(normalizeEscapedPaths(results[0].content), `<img src="/.11ty/image/?src=test%2Fbio-2017.jpg&width=1280&format=jpeg&via=transform" alt="My ugly mug" width="1280" height="853">`);
 });
 
-test("Using the transform plugin with transform on request during dev mode (with default attributes)", async t => {
+test("Using the transform plugin with transform on request during dev mode (with default attributes)", async () => {
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
       eleventyConfig.addTemplate("virtual.html", `<img src="./bio-2017.jpg" alt="My ugly mug">`);
@@ -89,11 +90,11 @@ test("Using the transform plugin with transform on request during dev mode (with
   });
 
   let results = await elev.toJSON();
-  t.is(normalizeEscapedPaths(results[0].content), `<img src="/.11ty/image/?src=test%2Fbio-2017.jpg&width=1280&format=jpeg&via=transform" alt="My ugly mug" loading="lazy" width="1280" height="853">`);
+  assert.equal(normalizeEscapedPaths(results[0].content), `<img src="/.11ty/image/?src=test%2Fbio-2017.jpg&width=1280&format=jpeg&via=transform" alt="My ugly mug" loading="lazy" width="1280" height="853">`);
 });
 
 
-test("Using the transform plugin with transform on request during dev mode but don’t override existing urlFormat", async t => {
+test("Using the transform plugin with transform on request during dev mode but don’t override existing urlFormat", async () => {
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
       eleventyConfig.addTemplate("virtual.html", `<img src="./bio-2017.jpg" alt="My ugly mug">`);
@@ -114,10 +115,10 @@ test("Using the transform plugin with transform on request during dev mode but d
   });
 
   let results = await elev.toJSON();
-  t.is(results[0].content, `<img src="https://example.com/" alt="My ugly mug" loading="lazy" width="1280" height="853">`);
+  assert.equal(results[0].content, `<img src="https://example.com/" alt="My ugly mug" loading="lazy" width="1280" height="853">`);
 });
 
-test("Throw a good error with a bad remote image request", async t => {
+test("Throw a good error with a bad remote image request", async () => {
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
       eleventyConfig.addTemplate("virtual.html", `<img src="https://images.opencollective.com/sdkljflksjdflksdjf_DOES_NOT_EXIST/NOT_EXIST/avatar.png" alt="My ugly mug">`);
@@ -135,11 +136,10 @@ test("Throw a good error with a bad remote image request", async t => {
   });
   elev.disableLogger();
 
-  let e = await t.throwsAsync(() => elev.toJSON());
-  t.is(e.message, `Having trouble writing to "./test/_site/virtual/index.html" from "./test/virtual.html"`);
+  await assert.rejects(() => elev.toJSON(), { message: `Having trouble writing to "./test/_site/virtual/index.html" from "./test/virtual.html"` });
 });
 
-test("Transform image file with diacritics #253", async t => {
+test("Transform image file with diacritics #253", async () => {
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
       eleventyConfig.addTemplate("virtual.html", `<img src="./les sous titres automatisés de youtube.jpg" alt="My ugly mug">`);
@@ -155,10 +155,10 @@ test("Transform image file with diacritics #253", async t => {
   elev.disableLogger();
 
   let results = await elev.toJSON();
-  t.is(normalizeEscapedPaths(results[0].content), `<img src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" width="1280" height="853">`);
+  assert.equal(normalizeEscapedPaths(results[0].content), `<img src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" width="1280" height="853">`);
 });
 
-test("Transform image file in folder with diacritics #253", async t => {
+test("Transform image file in folder with diacritics #253", async () => {
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
       // Broken:  20240705.île-de-myst-en-lego
@@ -175,10 +175,10 @@ test("Transform image file in folder with diacritics #253", async t => {
   elev.disableLogger();
 
   let results = await elev.toJSON();
-  t.is(normalizeEscapedPaths(results[0].content), `<img src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" width="1280" height="853">`);
+  assert.equal(normalizeEscapedPaths(results[0].content), `<img src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" width="1280" height="853">`);
 });
 
-test("Transform image file in markdown with diacritics #253", async t => {
+test("Transform image file in markdown with diacritics #253", async () => {
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
       eleventyConfig.addTemplate("virtual.md", `![My ugly mug](./automatisés.jpg)`);
@@ -193,11 +193,11 @@ test("Transform image file in markdown with diacritics #253", async t => {
   elev.disableLogger();
 
   let results = await elev.toJSON();
-  t.is(normalizeEscapedPaths(results[0].content).trim(), `<p><img src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" width="1280" height="853"></p>`);
+  assert.equal(normalizeEscapedPaths(results[0].content).trim(), `<p><img src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" width="1280" height="853"></p>`);
 });
 
 // Doesn’t work on Ubuntu
-test.skip("Transform image file in folder with *combining* diacritics #253", async t => {
+test.skip("Transform image file in folder with *combining* diacritics #253", async () => {
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
       eleventyConfig.addTemplate("virtual.html", `<img src="./île-de-myst-en-lego/les sous titres automatisés de youtube.jpg" alt="My ugly mug">`);
@@ -210,10 +210,10 @@ test.skip("Transform image file in folder with *combining* diacritics #253", asy
   });
 
   let results = await elev.toJSON();
-  t.is(normalizeEscapedPaths(results[0].content), `<img src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" width="1280" height="853">`);
+  assert.equal(normalizeEscapedPaths(results[0].content), `<img src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" width="1280" height="853">`);
 });
 
-test("Don’t throw an error when failOnError: false with a bad remote image request", async t => {
+test("Don’t throw an error when failOnError: false with a bad remote image request", async () => {
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
       eleventyConfig.addTemplate("virtual.html", `<img src="https://images.opencollective.com/sdkljflksjdflksdjf_DOES_NOT_EXIST/NOT_EXIST/avatar.png" alt="My ugly mug">`);
@@ -234,10 +234,10 @@ test("Don’t throw an error when failOnError: false with a bad remote image req
   elev.disableLogger();
 
   let results = await elev.toJSON();
-  t.is(normalizeEscapedPaths(results[0].content), `<img src="https://images.opencollective.com/sdkljflksjdflksdjf_DOES_NOT_EXIST/NOT_EXIST/avatar.png" alt="My ugly mug">`);
+  assert.equal(normalizeEscapedPaths(results[0].content), `<img src="https://images.opencollective.com/sdkljflksjdflksdjf_DOES_NOT_EXIST/NOT_EXIST/avatar.png" alt="My ugly mug">`);
 });
 
-test("Don’t throw an error when failOnError: true but `eleventy:optional=keep` attribute with a bad remote image request", async t => {
+test("Don’t throw an error when failOnError: true but `eleventy:optional=keep` attribute with a bad remote image request", async () => {
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
       eleventyConfig.addTemplate("virtual.html", `<img src="https://images.opencollective.com/sdkljflksjdflksdjf_DOES_NOT_EXIST/NOT_EXIST/avatar.png" alt="My ugly mug" eleventy:optional="keep">`);
@@ -258,10 +258,10 @@ test("Don’t throw an error when failOnError: true but `eleventy:optional=keep`
   elev.disableLogger();
 
   let results = await elev.toJSON();
-  t.is(normalizeEscapedPaths(results[0].content), `<img src="https://images.opencollective.com/sdkljflksjdflksdjf_DOES_NOT_EXIST/NOT_EXIST/avatar.png" alt="My ugly mug">`);
+  assert.equal(normalizeEscapedPaths(results[0].content), `<img src="https://images.opencollective.com/sdkljflksjdflksdjf_DOES_NOT_EXIST/NOT_EXIST/avatar.png" alt="My ugly mug">`);
 });
 
-test("Don’t throw an error when failOnError: false and `eleventy:optional=keep` attribute with a bad remote image request", async t => {
+test("Don’t throw an error when failOnError: false and `eleventy:optional=keep` attribute with a bad remote image request", async () => {
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
       eleventyConfig.addTemplate("virtual.html", `<img src="https://images.opencollective.com/sdkljflksjdflksdjf_DOES_NOT_EXIST/NOT_EXIST/avatar.png" alt="My ugly mug" eleventy:optional="keep">`);
@@ -282,10 +282,10 @@ test("Don’t throw an error when failOnError: false and `eleventy:optional=keep
   elev.disableLogger();
 
   let results = await elev.toJSON();
-  t.is(normalizeEscapedPaths(results[0].content), `<img src="https://images.opencollective.com/sdkljflksjdflksdjf_DOES_NOT_EXIST/NOT_EXIST/avatar.png" alt="My ugly mug">`);
+  assert.equal(normalizeEscapedPaths(results[0].content), `<img src="https://images.opencollective.com/sdkljflksjdflksdjf_DOES_NOT_EXIST/NOT_EXIST/avatar.png" alt="My ugly mug">`);
 });
 
-test("Don’t throw an error when failOnError: false and `eleventy:optional` attribute with a bad remote image request", async t => {
+test("Don’t throw an error when failOnError: false and `eleventy:optional` attribute with a bad remote image request", async () => {
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
       eleventyConfig.addTemplate("virtual.html", `<img src="https://images.opencollective.com/sdkljflksjdflksdjf_DOES_NOT_EXIST/NOT_EXIST/avatar.png" alt="My ugly mug" eleventy:optional>`);
@@ -302,10 +302,10 @@ test("Don’t throw an error when failOnError: false and `eleventy:optional` att
   elev.disableLogger();
 
   let results = await elev.toJSON();
-  t.is(normalizeEscapedPaths(results[0].content), `<img alt="My ugly mug">`);
+  assert.equal(normalizeEscapedPaths(results[0].content), `<img alt="My ugly mug">`);
 });
 
-test("Don’t throw an error when failOnError: false and `eleventy:optional=placeholder` attribute with a bad remote image request", async t => {
+test("Don’t throw an error when failOnError: false and `eleventy:optional=placeholder` attribute with a bad remote image request", async () => {
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
       eleventyConfig.addTemplate("virtual.html", `<img src="https://images.opencollective.com/sdkljflksjdflksdjf_DOES_NOT_EXIST/NOT_EXIST/avatar.png" alt="My ugly mug" eleventy:optional="placeholder">`);
@@ -322,10 +322,10 @@ test("Don’t throw an error when failOnError: false and `eleventy:optional=plac
   elev.disableLogger();
 
   let results = await elev.toJSON();
-  t.is(normalizeEscapedPaths(results[0].content), `<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=" alt="My ugly mug">`);
+  assert.equal(normalizeEscapedPaths(results[0].content), `<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=" alt="My ugly mug">`);
 });
 
-test("Using the transform plugin, <img src=video.mp4> #257", async t => {
+test("Using the transform plugin, <img src=video.mp4> #257", async () => {
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
       eleventyConfig.addTemplate("virtual.html", `<img src="car.mp4" alt="My ugly mug" eleventy:optional="keep">`);
@@ -337,10 +337,10 @@ test("Using the transform plugin, <img src=video.mp4> #257", async t => {
   });
 
   let results = await elev.toJSON();
-  t.is(results[0].content, `<img src="car.mp4" alt="My ugly mug">`);
+  assert.equal(results[0].content, `<img src="car.mp4" alt="My ugly mug">`);
 });
 
-test("Using the transform plugin, <picture> to <picture> #214", async t => {
+test("Using the transform plugin, <picture> to <picture> #214", async () => {
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
       eleventyConfig.addTemplate("virtual.html", `<picture class="outer"><source type="image/webp" srcset="./bio-2017.webp 1280w"><img src="./bio-2017.jpg" alt="My ugly mug" class="inner"></picture>`);
@@ -353,10 +353,10 @@ test("Using the transform plugin, <picture> to <picture> #214", async t => {
   elev.disableLogger();
 
   let results = await elev.toJSON();
-  t.is(results[0].content, `<picture class="outer"><source type="image/webp" srcset="/virtual/KkPMmHd3hP-1280.webp"><img src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" class="inner" width="1280" height="853"></picture>`);
+  assert.equal(results[0].content, `<picture class="outer"><source type="image/webp" srcset="/virtual/KkPMmHd3hP-1280.webp"><img src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" class="inner" width="1280" height="853"></picture>`);
 });
 
-test("Using the transform plugin, <picture> to <img> #214", async t => {
+test("Using the transform plugin, <picture> to <img> #214", async () => {
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
       // Uses only the <img src> right now, see the debatable TODO in transform-plugin.js->getSourcePath
@@ -371,10 +371,10 @@ test("Using the transform plugin, <picture> to <img> #214", async t => {
   elev.disableLogger();
 
   let results = await elev.toJSON();
-  t.is(results[0].content, `<img src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" class="inner" width="1280" height="853">`);
+  assert.equal(results[0].content, `<img src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" class="inner" width="1280" height="853">`);
 });
 
-test("Using the transform plugin, <img> to <picture> #214", async t => {
+test("Using the transform plugin, <img> to <picture> #214", async () => {
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
       eleventyConfig.addTemplate("virtual.html", `<img src="./bio-2017.jpg" alt="My ugly mug" class="inner" eleventy:pictureattr:class="outer">`);
@@ -387,10 +387,10 @@ test("Using the transform plugin, <img> to <picture> #214", async t => {
   elev.disableLogger();
 
   let results = await elev.toJSON();
-  t.is(results[0].content, `<picture class="outer"><source type="image/webp" srcset="/virtual/KkPMmHd3hP-1280.webp"><img src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" class="inner" width="1280" height="853"></picture>`);
+  assert.equal(results[0].content, `<picture class="outer"><source type="image/webp" srcset="/virtual/KkPMmHd3hP-1280.webp"><img src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" class="inner" width="1280" height="853"></picture>`);
 });
 
-test("Using the transform plugin, <img> to <img>, keeps slot attribute #241", async t => {
+test("Using the transform plugin, <img> to <img>, keeps slot attribute #241", async () => {
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
       eleventyConfig.addTemplate("virtual.html", `<img src="./bio-2017.jpg" alt="My ugly mug" slot="image-1">`);
@@ -404,10 +404,10 @@ test("Using the transform plugin, <img> to <img>, keeps slot attribute #241", as
   elev.disableLogger();
 
   let results = await elev.toJSON();
-  t.is(results[0].content, `<img src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" slot="image-1" width="1280" height="853">`);
+  assert.equal(results[0].content, `<img src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" slot="image-1" width="1280" height="853">`);
 });
 
-test("Using the transform plugin, <img> to <picture>, keeps slot attribute #241", async t => {
+test("Using the transform plugin, <img> to <picture>, keeps slot attribute #241", async () => {
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
       eleventyConfig.addTemplate("virtual.html", `<img src="./bio-2017.jpg" alt="My ugly mug" slot="image-1">`);
@@ -420,10 +420,10 @@ test("Using the transform plugin, <img> to <picture>, keeps slot attribute #241"
   elev.disableLogger();
 
   let results = await elev.toJSON();
-  t.is(results[0].content, `<picture><source type="image/webp" srcset="/virtual/KkPMmHd3hP-1280.webp"><img src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" slot="image-1" width="1280" height="853"></picture>`);
+  assert.equal(results[0].content, `<picture><source type="image/webp" srcset="/virtual/KkPMmHd3hP-1280.webp"><img src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" slot="image-1" width="1280" height="853"></picture>`);
 });
 
-test("#234 Use existing `width` attribute for `widths` config", async t => {
+test("#234 Use existing `width` attribute for `widths` config", async () => {
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
       eleventyConfig.addTemplate("virtual.html", `<img src="./bio-2017.jpg" alt="My ugly mug" width="200">`);
@@ -436,10 +436,10 @@ test("#234 Use existing `width` attribute for `widths` config", async t => {
   elev.disableLogger();
 
   let results = await elev.toJSON();
-  t.is(results[0].content, `<picture><source type="image/webp" srcset="/virtual/KkPMmHd3hP-200.webp"><img src="/virtual/KkPMmHd3hP-200.jpeg" alt="My ugly mug" width="200" height="133"></picture>`);
+  assert.equal(results[0].content, `<picture><source type="image/webp" srcset="/virtual/KkPMmHd3hP-200.webp"><img src="/virtual/KkPMmHd3hP-200.jpeg" alt="My ugly mug" width="200" height="133"></picture>`);
 });
 
-test("#234 Use existing `width` attribute for `widths` config (huge width uses max intrinsic)", async t => {
+test("#234 Use existing `width` attribute for `widths` config (huge width uses max intrinsic)", async () => {
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
       eleventyConfig.addTemplate("virtual.html", `<img src="./bio-2017.jpg" alt="My ugly mug" width="2000">`);
@@ -452,10 +452,10 @@ test("#234 Use existing `width` attribute for `widths` config (huge width uses m
   elev.disableLogger();
 
   let results = await elev.toJSON();
-  t.is(results[0].content, `<picture><source type="image/webp" srcset="/virtual/KkPMmHd3hP-1280.webp"><img src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" width="1280" height="853"></picture>`);
+  assert.equal(results[0].content, `<picture><source type="image/webp" srcset="/virtual/KkPMmHd3hP-1280.webp"><img src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" width="1280" height="853"></picture>`);
 });
 
-test("#234 Use existing `width` attribute for `widths` config (comma separated widths are ignored as invalid. Discourage invalid `width` HTML attribute, use eleventy:widths instead)", async t => {
+test("#234 Use existing `width` attribute for `widths` config (comma separated widths are ignored as invalid. Discourage invalid `width` HTML attribute, use eleventy:widths instead)", async () => {
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
       eleventyConfig.addTemplate("virtual.html", `<img src="./bio-2017.jpg" alt="My ugly mug" width="100,200">`);
@@ -468,10 +468,10 @@ test("#234 Use existing `width` attribute for `widths` config (comma separated w
   elev.disableLogger();
 
   let results = await elev.toJSON();
-  t.is(results[0].content, `<picture><source type="image/webp" srcset="/virtual/KkPMmHd3hP-1280.webp"><img src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" width="1280" height="853"></picture>`);
+  assert.equal(results[0].content, `<picture><source type="image/webp" srcset="/virtual/KkPMmHd3hP-1280.webp"><img src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" width="1280" height="853"></picture>`);
 });
 
-test("#314 Prefer `eleventy:widths` over `width` attribute", async t => {
+test("#314 Prefer `eleventy:widths` over `width` attribute", async () => {
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
       eleventyConfig.addTemplate("virtual.html", `<img src="./bio-2017.jpg" alt="My ugly mug" eleventy:widths="100" width="200">`);
@@ -484,10 +484,10 @@ test("#314 Prefer `eleventy:widths` over `width` attribute", async t => {
   elev.disableLogger();
 
   let results = await elev.toJSON();
-  t.is(results[0].content, `<picture><source type="image/webp" srcset="/virtual/KkPMmHd3hP-100.webp"><img src="/virtual/KkPMmHd3hP-100.jpeg" alt="My ugly mug" width="100" height="66"></picture>`);
+  assert.equal(results[0].content, `<picture><source type="image/webp" srcset="/virtual/KkPMmHd3hP-100.webp"><img src="/virtual/KkPMmHd3hP-100.jpeg" alt="My ugly mug" width="100" height="66"></picture>`);
 });
 
-test("#306 `eleventy:sizes` overrides `sizes` default from config", async t => {
+test("#306 `eleventy:sizes` overrides `sizes` default from config", async () => {
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
       eleventyConfig.addTemplate("virtual.html", `<img src="./bio-2017.jpg" alt="My ugly mug" eleventy:widths="100,200" eleventy:sizes="(max-width: 599px) 100vw, 600px">`);
@@ -504,10 +504,10 @@ test("#306 `eleventy:sizes` overrides `sizes` default from config", async t => {
   elev.disableLogger();
 
   let results = await elev.toJSON();
-  t.is(results[0].content, `<picture><source type="image/webp" srcset="/virtual/KkPMmHd3hP-100.webp 100w, /virtual/KkPMmHd3hP-200.webp 200w" sizes="(max-width: 599px) 100vw, 600px"><img src="/virtual/KkPMmHd3hP-100.jpeg" alt="My ugly mug" width="200" height="133" srcset="/virtual/KkPMmHd3hP-100.jpeg 100w, /virtual/KkPMmHd3hP-200.jpeg 200w" sizes="(max-width: 599px) 100vw, 600px"></picture>`);
+  assert.equal(results[0].content, `<picture><source type="image/webp" srcset="/virtual/KkPMmHd3hP-100.webp 100w, /virtual/KkPMmHd3hP-200.webp 200w" sizes="(max-width: 599px) 100vw, 600px"><img src="/virtual/KkPMmHd3hP-100.jpeg" alt="My ugly mug" width="200" height="133" srcset="/virtual/KkPMmHd3hP-100.jpeg 100w, /virtual/KkPMmHd3hP-200.jpeg 200w" sizes="(max-width: 599px) 100vw, 600px"></picture>`);
 });
 
-test("#306 `eleventy:sizes` overrides `sizes` attribute", async t => {
+test("#306 `eleventy:sizes` overrides `sizes` attribute", async () => {
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
       eleventyConfig.addTemplate("virtual.html", `<img src="./bio-2017.jpg" alt="My ugly mug" eleventy:widths="100,200" sizes="(max-width: 1024px) 100vw, 1600px" eleventy:sizes="(max-width: 599px) 100vw, 600px">`);
@@ -520,10 +520,10 @@ test("#306 `eleventy:sizes` overrides `sizes` attribute", async t => {
   elev.disableLogger();
 
   let results = await elev.toJSON();
-  t.is(results[0].content, `<picture><source type="image/webp" srcset="/virtual/KkPMmHd3hP-100.webp 100w, /virtual/KkPMmHd3hP-200.webp 200w" sizes="(max-width: 599px) 100vw, 600px"><img src="/virtual/KkPMmHd3hP-100.jpeg" alt="My ugly mug" width="200" height="133" srcset="/virtual/KkPMmHd3hP-100.jpeg 100w, /virtual/KkPMmHd3hP-200.jpeg 200w" sizes="(max-width: 599px) 100vw, 600px"></picture>`);
+  assert.equal(results[0].content, `<picture><source type="image/webp" srcset="/virtual/KkPMmHd3hP-100.webp 100w, /virtual/KkPMmHd3hP-200.webp 200w" sizes="(max-width: 599px) 100vw, 600px"><img src="/virtual/KkPMmHd3hP-100.jpeg" alt="My ugly mug" width="200" height="133" srcset="/virtual/KkPMmHd3hP-100.jpeg 100w, /virtual/KkPMmHd3hP-200.jpeg 200w" sizes="(max-width: 599px) 100vw, 600px"></picture>`);
 });
 
-test("#306 `sizes` attribute overrides `sizes` default from config", async t => {
+test("#306 `sizes` attribute overrides `sizes` default from config", async () => {
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
       eleventyConfig.addTemplate("virtual.html", `<img src="./bio-2017.jpg" alt="My ugly mug" eleventy:widths="100,200" sizes="(max-width: 599px) 100vw, 600px">`);
@@ -540,11 +540,11 @@ test("#306 `sizes` attribute overrides `sizes` default from config", async t => 
   elev.disableLogger();
 
   let results = await elev.toJSON();
-  t.is(results[0].content, `<picture><source type="image/webp" srcset="/virtual/KkPMmHd3hP-100.webp 100w, /virtual/KkPMmHd3hP-200.webp 200w" sizes="(max-width: 599px) 100vw, 600px"><img src="/virtual/KkPMmHd3hP-100.jpeg" alt="My ugly mug" width="200" height="133" srcset="/virtual/KkPMmHd3hP-100.jpeg 100w, /virtual/KkPMmHd3hP-200.jpeg 200w" sizes="(max-width: 599px) 100vw, 600px"></picture>`);
+  assert.equal(results[0].content, `<picture><source type="image/webp" srcset="/virtual/KkPMmHd3hP-100.webp 100w, /virtual/KkPMmHd3hP-200.webp 200w" sizes="(max-width: 599px) 100vw, 600px"><img src="/virtual/KkPMmHd3hP-100.jpeg" alt="My ugly mug" width="200" height="133" srcset="/virtual/KkPMmHd3hP-100.jpeg 100w, /virtual/KkPMmHd3hP-200.jpeg 200w" sizes="(max-width: 599px) 100vw, 600px"></picture>`);
 });
 
 
-test("#236 Use with permalink with file name", async t => {
+test("#236 Use with permalink with file name", async () => {
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
       eleventyConfig.addTemplate("virtual.md", `![alt text](./bio-2017.jpg)`, {
@@ -561,10 +561,10 @@ test("#236 Use with permalink with file name", async t => {
 
   let results = await elev.toJSON();
 
-  t.is(results[0].content.trim(), `<p><img src="/blog/posts/KkPMmHd3hP-1280.jpeg" alt="alt text" width="1280" height="853"></p>`);
+  assert.equal(results[0].content.trim(), `<p><img src="/blog/posts/KkPMmHd3hP-1280.jpeg" alt="alt text" width="1280" height="853"></p>`);
 });
 
-test("Using imgAttributes/pictureAttributes alongside defaultAttributes (removing this from docs) in transform method", async t => {
+test("Using imgAttributes/pictureAttributes alongside defaultAttributes (removing this from docs) in transform method", async () => {
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
       eleventyConfig.addTemplate("virtual.html", `<img src="./bio-2017.jpg" alt="My ugly mug">`);
@@ -588,10 +588,10 @@ test("Using imgAttributes/pictureAttributes alongside defaultAttributes (removin
   });
 
   let results = await elev.toJSON();
-  t.is(results[0].content, `<picture class="outer"><source type="image/webp" srcset="/virtual/KkPMmHd3hP-1280.webp"><img class="inner" src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" width="1280" height="853"></picture>`);
+  assert.equal(results[0].content, `<picture class="outer"><source type="image/webp" srcset="/virtual/KkPMmHd3hP-1280.webp"><img class="inner" src="/virtual/KkPMmHd3hP-1280.jpeg" alt="My ugly mug" width="1280" height="853"></picture>`);
 });
 
-test("#276 Strip eleventy:ignore attribute from img elements inside picture elements", async t => {
+test("#276 Strip eleventy:ignore attribute from img elements inside picture elements", async () => {
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
       eleventyConfig.addTemplate("virtual.html", `<picture><img eleventy:ignore src="./bio-2017.jpg" alt="My ugly mug"></picture>`);
@@ -604,10 +604,10 @@ test("#276 Strip eleventy:ignore attribute from img elements inside picture elem
   elev.disableLogger();
 
   let results = await elev.toJSON();
-  t.is(results[0].content, `<picture><img src="./bio-2017.jpg" alt="My ugly mug"></picture>`);
+  assert.equal(results[0].content, `<picture><img src="./bio-2017.jpg" alt="My ugly mug"></picture>`);
 });
 
-test("#212 Passthrough via `formats: ['passthrough']` plugin option (adds width/height, no Sharp processing)", async t => {
+test("#212 Passthrough via `formats: ['passthrough']` plugin option (adds width/height, no Sharp processing)", async () => {
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
       eleventyConfig.addTemplate("virtual.html", `<img src="./bio-2017.jpg" alt="My ugly mug">`);
@@ -622,10 +622,10 @@ test("#212 Passthrough via `formats: ['passthrough']` plugin option (adds width/
 
   let results = await elev.toJSON();
   // native format (jpeg), single <img> (no <picture>), intrinsic dimensions
-  t.is(results[0].content, `<img src="/virtual/KkPMmHd3hP.jpeg" alt="My ugly mug" width="1280" height="853">`);
+  assert.equal(results[0].content, `<img src="/virtual/KkPMmHd3hP.jpeg" alt="My ugly mug" width="1280" height="853">`);
 });
 
-test("#212 Passthrough via `eleventy:formats=\"passthrough\"` attribute", async t => {
+test("#212 Passthrough via `eleventy:formats=\"passthrough\"` attribute", async () => {
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
       eleventyConfig.addTemplate("virtual.html", `<img eleventy:formats="passthrough" src="./bio-2017.jpg" alt="My ugly mug">`);
@@ -638,10 +638,10 @@ test("#212 Passthrough via `eleventy:formats=\"passthrough\"` attribute", async 
   elev.disableLogger();
 
   let results = await elev.toJSON();
-  t.is(results[0].content, `<img src="/virtual/KkPMmHd3hP.jpeg" alt="My ugly mug" width="1280" height="853">`);
+  assert.equal(results[0].content, `<img src="/virtual/KkPMmHd3hP.jpeg" alt="My ugly mug" width="1280" height="853">`);
 });
 
-test("#212 Passthrough via `eleventy:formats=\"passthrough\"` attribute overrides a processing default", async t => {
+test("#212 Passthrough via `eleventy:formats=\"passthrough\"` attribute overrides a processing default", async () => {
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
       eleventyConfig.addTemplate("virtual.html", `<img eleventy:formats="passthrough" src="./bio-2017.jpg" alt="My ugly mug">`);
@@ -655,10 +655,10 @@ test("#212 Passthrough via `eleventy:formats=\"passthrough\"` attribute override
   elev.disableLogger();
 
   let results = await elev.toJSON();
-  t.is(results[0].content, `<img src="/virtual/KkPMmHd3hP.jpeg" alt="My ugly mug" width="1280" height="853">`);
+  assert.equal(results[0].content, `<img src="/virtual/KkPMmHd3hP.jpeg" alt="My ugly mug" width="1280" height="853">`);
 });
 
-test("#212 Passthrough as one of many formats: <picture> with a webp source and the original <img> fallback", async t => {
+test("#212 Passthrough as one of many formats: <picture> with a webp source and the original <img> fallback", async () => {
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
       eleventyConfig.addTemplate("virtual.html", `<img src="./bio-2017.jpg" alt="My ugly mug">`);
@@ -672,10 +672,10 @@ test("#212 Passthrough as one of many formats: <picture> with a webp source and 
   elev.disableLogger();
 
   let results = await elev.toJSON();
-  t.is(results[0].content, `<picture><source type="image/webp" srcset="/virtual/KkPMmHd3hP-1280.webp"><img src="/virtual/KkPMmHd3hP.jpeg" alt="My ugly mug" width="1280" height="853"></picture>`);
+  assert.equal(results[0].content, `<picture><source type="image/webp" srcset="/virtual/KkPMmHd3hP-1280.webp"><img src="/virtual/KkPMmHd3hP.jpeg" alt="My ugly mug" width="1280" height="853"></picture>`);
 });
 
-test("#212 Passthrough during --serve mode defers to the on-request endpoint (nothing written at transform time)", async t => {
+test("#212 Passthrough during --serve mode defers to the on-request endpoint (nothing written at transform time)", async () => {
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
       eleventyConfig.addTemplate("virtual.html", `<img src="./bio-2017.jpg" alt="My ugly mug">`);
@@ -692,7 +692,7 @@ test("#212 Passthrough during --serve mode defers to the on-request endpoint (no
   let results = await elev.toJSON();
   // Nothing is written at transform time: src points at /.11ty/image/ with `format=passthrough`,
   // which tells the on-request endpoint to stream the original bytes (no re-encode) in dev.
-  t.is(normalizeEscapedPaths(results[0].content), `<img src="/.11ty/image/?src=test%2Fbio-2017.jpg&width=1280&format=passthrough&via=transform" alt="My ugly mug" width="1280" height="853">`);
+  assert.equal(normalizeEscapedPaths(results[0].content), `<img src="/.11ty/image/?src=test%2Fbio-2017.jpg&width=1280&format=passthrough&via=transform" alt="My ugly mug" width="1280" height="853">`);
 });
 
 // https://github.com/11ty/image/issues/358 (originally reported as 11ty/eleventy-base-blog#252)
@@ -700,7 +700,7 @@ test("#212 Passthrough during --serve mode defers to the on-request endpoint (no
 // file system path we resolved internally (e.g. `content/kittens.jpg`) instead of the author’s
 // original attribute value. Remote sources didn’t show this because `normalizeImageSource`
 // returns full URLs untouched—only local sources are rewritten.
-test("#358 failOnError: false keeps the original `src` for a missing local image (root-relative)", async t => {
+test("#358 failOnError: false keeps the original `src` for a missing local image (root-relative)", async () => {
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
       // `/img/logo.webp` is passthrough copied in the user’s project, so it does not exist
@@ -717,10 +717,10 @@ test("#358 failOnError: false keeps the original `src` for a missing local image
   elev.disableLogger();
 
   let results = await elev.toJSON();
-  t.is(results[0].content, `<img src="/img/logo.webp" alt="My ugly mug" style="padding: 2em;">`);
+  assert.equal(results[0].content, `<img src="/img/logo.webp" alt="My ugly mug" style="padding: 2em;">`);
 });
 
-test("#358 failOnError: false keeps the original `src` for a missing local image (relative)", async t => {
+test("#358 failOnError: false keeps the original `src` for a missing local image (relative)", async () => {
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
       eleventyConfig.addTemplate("virtual.html", `<img src="./kittens-DOES-NOT-EXIST.jpg" alt="My ugly mug">`);
@@ -735,7 +735,7 @@ test("#358 failOnError: false keeps the original `src` for a missing local image
   elev.disableLogger();
 
   let results = await elev.toJSON();
-  t.is(results[0].content, `<img src="./kittens-DOES-NOT-EXIST.jpg" alt="My ugly mug">`);
+  assert.equal(results[0].content, `<img src="./kittens-DOES-NOT-EXIST.jpg" alt="My ugly mug">`);
 });
 
 // Both fixtures below mirror eleventy-base-blog’s `content/`: a post whose image sits next to it,
@@ -752,7 +752,7 @@ test("#358 failOnError: false keeps the original `src` for a missing local image
 // `/blog/post/RMWe6Me2nc-150.jpeg` on disk, so it must leave the value alone. Before the fix it
 // overwrote it with the file system path it tried, which is why `renderTransforms` appeared to do
 // nothing at all.
-test("#358 `renderTransforms(post.data.page)` resolves a relative `src` in inline-rendered post content", async t => {
+test("#358 `renderTransforms(post.data.page)` resolves a relative `src` in inline-rendered post content", async () => {
   let elev = new Eleventy( "test/fixtures/issue358-relative", "test/_site", {
     config: eleventyConfig => {
       eleventyConfig.addPlugin(eleventyImageTransformPlugin, {
@@ -769,9 +769,9 @@ test("#358 `renderTransforms(post.data.page)` resolves a relative `src` in inlin
   let post = results.filter(entry => entry.url === "/blog/post/")[0];
 
   let expected = `<img src="/blog/post/RMWe6Me2nc-150.jpeg" alt="My ugly mug" width="150" height="100">`;
-  t.is(post.content.trim(), expected);
+  assert.equal(post.content.trim(), expected);
   // The whole point of #358: inline rendering resolves to the same image as the post’s own page.
-  t.is(home.content.trim(), expected);
+  assert.equal(home.content.trim(), expected);
 });
 
 // Variant B — absolute `src`, no `renderTransforms`:
@@ -782,7 +782,7 @@ test("#358 `renderTransforms(post.data.page)` resolves a relative `src` in inlin
 // input directory rather than to `inputPath`, and `getOutputLocations` sends it to the shared
 // `/img/` output instead of colocating it. So inline rendering resolves with no filter at all—and,
 // unlike variant A, this one already worked before the fix.
-test("#358 an absolute `src` resolves in inline-rendered post content without `renderTransforms`", async t => {
+test("#358 an absolute `src` resolves in inline-rendered post content without `renderTransforms`", async () => {
   let elev = new Eleventy( "test/fixtures/issue358-absolute", "test/_site", {
     config: eleventyConfig => {
       eleventyConfig.addPlugin(eleventyImageTransformPlugin, {
@@ -799,11 +799,11 @@ test("#358 an absolute `src` resolves in inline-rendered post content without `r
   let post = results.filter(entry => entry.url === "/blog/post/")[0];
 
   let expected = `<img src="/img/RMWe6Me2nc-150.jpeg" alt="My ugly mug" width="150" height="100">`;
-  t.is(post.content.trim(), expected);
-  t.is(home.content.trim(), expected);
+  assert.equal(post.content.trim(), expected);
+  assert.equal(home.content.trim(), expected);
 });
 
-test("#357 Relative image on a page with `.html` stripped from its url via addUrlTransform", async t => {
+test("#357 Relative image on a page with `.html` stripped from its url via addUrlTransform", async () => {
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
       eleventyConfig.addTemplate("virtual.md", `![alt text](./bio-2017.jpg)`, {
@@ -822,11 +822,11 @@ test("#357 Relative image on a page with `.html` stripped from its url via addUr
 
   let results = await elev.toJSON();
 
-  t.is(results[0].url, "/items/hiw-10");
-  t.is(results[0].content.trim(), `<p><img src="/items/KkPMmHd3hP-1280.jpeg" alt="alt text" width="1280" height="853"></p>`);
+  assert.equal(results[0].url, "/items/hiw-10");
+  assert.equal(results[0].content.trim(), `<p><img src="/items/KkPMmHd3hP-1280.jpeg" alt="alt text" width="1280" height="853"></p>`);
 });
 
-test("#70 `transformDataUris: true` transforms data URI images", async t => {
+test("#70 `transformDataUris: true` transforms data URI images", async () => {
   let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="70" height="10"><rect width="70" height="10"/></svg>`;
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
@@ -842,10 +842,10 @@ test("#70 `transformDataUris: true` transforms data URI images", async t => {
   elev.disableLogger();
 
   let results = await elev.toJSON();
-  t.regex(results[0].content, /^<img src="\/virtual\/[^"]+-70\.png" alt="Box" width="70" height="10">$/);
+  assert.match(results[0].content, /^<img src="\/virtual\/[^"]+-70\.png" alt="Box" width="70" height="10">$/);
 });
 
-test("#70 `transformDataUris: true` with a percent-encoded data URI containing HTML entities", async t => {
+test("#70 `transformDataUris: true` with a percent-encoded data URI containing HTML entities", async () => {
   let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="71" height="10"><rect width="71" height="10"/></svg>`;
   let elev = new Eleventy( "test", "test/_site", {
     config: eleventyConfig => {
@@ -861,5 +861,5 @@ test("#70 `transformDataUris: true` with a percent-encoded data URI containing H
   elev.disableLogger();
 
   let results = await elev.toJSON();
-  t.regex(results[0].content, /^<img src="\/virtual\/[^"]+-71\.png" alt="Box" width="71" height="10">$/);
+  assert.match(results[0].content, /^<img src="\/virtual\/[^"]+-71\.png" alt="Box" width="71" height="10">$/);
 });

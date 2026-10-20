@@ -335,7 +335,7 @@ export default class Image {
         htmlOptions: {
           whitespaceMode: this.options.htmlOptions?.whitespaceMode,
           imgAttributes,
-          pictureAttributes: this.options.htmlOptions?.pictureAttributes,
+          pictureAttributes: Object.assign({}, this.options.htmlOptions?.pictureAttributes),
           fallback: this.options.htmlOptions?.fallback,
         },
       }

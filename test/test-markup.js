@@ -490,3 +490,23 @@ test("#239 full urls in urlPath", async t => {
 
   t.is(html, `<img alt="" src="http://example.com/img/KkPMmHd3hP-1280.jpeg" width="1280" height="853">`);
 });
+
+test("User-supplied htmlOptions attributes are not mutated", async t => {
+  let htmlOptions = {
+    imgAttributes: { alt: "" },
+    pictureAttributes: { class: "pic" },
+  };
+
+  let results = await eleventyImage("./test/bio-2017.jpg", {
+    dryRun: true,
+    widths: [123],
+    formats: ["webp", "jpeg"],
+    htmlOptions,
+  });
+
+  t.deepEqual(htmlOptions.imgAttributes, { alt: "" });
+  t.deepEqual(htmlOptions.pictureAttributes, { class: "pic" });
+
+  results.eleventyImage.htmlOptions.pictureAttributes.id = "changed";
+  t.deepEqual(htmlOptions.pictureAttributes, { class: "pic" });
+});

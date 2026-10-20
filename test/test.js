@@ -1280,6 +1280,65 @@ test("Animated gif format filtering (one valid one)", async t => {
   t.true( stats.gif[0].size > 1000*999 );
 });
 
+test("Animated gif to animated webp", async t => {
+  let stats = await eleventyImage("./test/earth-animated.gif", {
+    dryRun: true,
+    formats: ["webp"],
+    sharpOptions: {
+      animated: true
+    },
+    useCache: false,
+  });
+
+  t.is(stats.webp.length, 1);
+  t.is(stats.webp[0].width, 400);
+  // `pageHeight`, not the sum of every frame’s height
+  t.is(stats.webp[0].height, 400);
+
+  // all of the frames survived the gif->webp conversion
+  let metadata = await sharp(stats.webp[0].buffer).metadata();
+  t.is(metadata.format, "webp");
+  t.is(metadata.pages, 44);
+
+  // still a healthy win over the ~1MB source gif
+  t.true( stats.webp[0].size < 1000*999, `${stats.webp[0].size} size is too big, should be smaller than ${1000*999}.` );
+});
+
+test("Animated gif to webp without `sharpOptions.animated` is a single frame", async t => {
+  let stats = await eleventyImage("./test/earth-animated.gif", {
+    dryRun: true,
+    formats: ["webp"],
+    useCache: false,
+  });
+
+  t.is(stats.webp.length, 1);
+  t.is(stats.webp[0].width, 400);
+  t.is(stats.webp[0].height, 400);
+
+  // sharp omits `pages` entirely for a still image
+  let metadata = await sharp(stats.webp[0].buffer).metadata();
+  t.is(metadata.format, "webp");
+  t.is(metadata.pages, undefined);
+});
+
+test("Animated gif format filtering (webp is animation-friendly)", async t => {
+  let stats = await eleventyImage("./test/earth-animated.gif", {
+    dryRun: true,
+    formats: ["jpeg", "webp"],
+    sharpOptions: {
+      animated: true
+    },
+    useCache: false,
+  });
+
+  // jpeg can’t animate, so it is filtered out of the output formats
+  t.deepEqual(Object.keys(stats), ["webp"]);
+  t.is(stats.webp.length, 1);
+
+  let metadata = await sharp(stats.webp[0].buffer).metadata();
+  t.is(metadata.pages, 44);
+});
+
 test("Change hashLength", async t => {
   let stats = await eleventyImage("./test/bio-2017.jpg", {
     widths: [null],

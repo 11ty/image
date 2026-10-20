@@ -802,3 +802,26 @@ test("#358 an absolute `src` resolves in inline-rendered post content without `r
   t.is(post.content.trim(), expected);
   t.is(home.content.trim(), expected);
 });
+
+test("#357 Relative image on a page with `.html` stripped from its url via addUrlTransform", async t => {
+  let elev = new Eleventy( "test", "test/_site", {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("virtual.md", `![alt text](./bio-2017.jpg)`, {
+        permalink: "items/hiw-10.html"
+      });
+
+      eleventyConfig.addUrlTransform(({ url }) => url.replace(/\.html$/, ""));
+
+      eleventyConfig.addPlugin(eleventyImageTransformPlugin, {
+        formats: ["auto"],
+        dryRun: true, // don’t write image files!
+      });
+    }
+  });
+  elev.disableLogger();
+
+  let results = await elev.toJSON();
+
+  t.is(results[0].url, "/items/hiw-10");
+  t.is(results[0].content.trim(), `<p><img src="/items/KkPMmHd3hP-1280.jpeg" alt="alt text" width="1280" height="853"></p>`);
+});

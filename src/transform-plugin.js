@@ -61,24 +61,15 @@ function getOutputLocations(originalSource, outputDirectoryFromAttribute, pageCo
   }
 
   // If original source is a relative one, this colocates images to the template output.
-  let dir = path.dirname(pageContext.outputPath);
-
-  // filename is included in url: ./dir/post.html => /dir/post.html
-  if(pageContext.outputPath.endsWith(pageContext.url)) {
-    // remove file name
-    let split = pageContext.url.split("/");
-    split[split.length - 1] = "";
-
-    return {
-      outputDir: dir,
-      urlPath: split.join("/"),
-    };
+  // Trailing slash means the url is the output directory (/dir/post/), otherwise drop the file name (/dir/post.html or /dir/post via addUrlTransform #357).
+  let urlPath = pageContext.url;
+  if(!urlPath.endsWith("/")) {
+    urlPath = urlPath.slice(0, urlPath.lastIndexOf("/") + 1);
   }
 
-  // filename is not included in url: ./dir/post/index.html => /dir/post/
   return {
-    outputDir: dir,
-    urlPath: pageContext.url,
+    outputDir: path.dirname(pageContext.outputPath),
+    urlPath,
   };
 }
 

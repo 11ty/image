@@ -19,7 +19,7 @@ let directoryManager = new DirectoryManager();
 let processingQueue = new PQueue({
   concurrency: getDefaults().concurrency
 });
-processingQueue.on("active", () => {
+processingQueue.addEventListener("active", () => {
   debug( `Concurrency: ${processingQueue.concurrency}, Size: ${processingQueue.size}, Pending: ${processingQueue.pending}` );
 });
 

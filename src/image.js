@@ -3,7 +3,7 @@ import path from "node:path";
 import { createDebug } from "obug";
 
 import { createHashSync, isPlainObject } from "@11ty/eleventy-utils";
-import { Fetch } from "@11ty/eleventy-fetch";
+import { createFetch } from "@11ty/eleventy-fetch";
 
 import sharp from "./adapters/sharp.js";
 import brotliSize from "./adapters/brotli-size.js";
@@ -104,7 +104,7 @@ export default class Image {
       }, this.options.cacheOptions);
 
       // v6.0.0 this now inherits eleventy-fetch option defaults
-      this.assetCache = Fetch(src, this.cacheOptions);
+      this.assetCache = createFetch(src, this.cacheOptions);
     }
   }
 

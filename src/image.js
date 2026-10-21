@@ -101,6 +101,8 @@ export default class Image {
         duration: this.options.cacheDuration,
         // Issue #117: re-use eleventy-img dryRun option value for eleventy-fetch dryRun
         dryRun: this.options.dryRun,
+        // Fetch v6 default changed, we can remove this later but it’d be a breaking change
+        timeout: false,
       }, this.options.cacheOptions);
 
       // v6.0.0 this now inherits eleventy-fetch option defaults

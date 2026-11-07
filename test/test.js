@@ -870,6 +870,93 @@ test("widths array should be ignored in hashing", async () => {
   assert.equal(stats2.jpeg[1].url, "/img/KkPMmHd3hP-600.jpeg");
 });
 
+test("empty sharpResizeOptions should be ignored in hashing", async () => {
+  let stats = await eleventyImage("./test/bio-2017.jpg", {
+    statsOnly: true,
+    widths: [1280],
+    sharpResizeOptions: {}
+  });
+
+  assert.equal(stats.jpeg[0].url, "/img/KkPMmHd3hP-1280.jpeg");
+});
+
+test("dimension sharpResizeOptions should be included in hashing", async () => {
+  let stats = await eleventyImage("./test/bio-2017.jpg", {
+    statsOnly: true,
+    widths: [1280],
+    sharpResizeOptions: {
+      width: 10,
+      height: 10,
+      withoutEnlargement: true,
+      withoutReduction: true,
+    }
+  });
+
+  assert.notEqual(stats.jpeg[0].url, "/img/KkPMmHd3hP-1280.jpeg");
+});
+
+test("sharpResizeOptions should apply to resize output and hash", async () => {
+  let defaultStats = await eleventyImage("./test/bio-2017.jpg", {
+    widths: [64],
+    formats: ["jpeg"],
+    outputDir: "./test/img/",
+    dryRun: true,
+    useCache: false,
+  });
+
+  let stats = await eleventyImage("./test/bio-2017.jpg", {
+    widths: [64],
+    formats: ["jpeg"],
+    outputDir: "./test/img/",
+    dryRun: true,
+    useCache: false,
+    sharpResizeOptions: {
+      kernel: "nearest",
+    },
+  });
+
+  assert.equal(stats.jpeg[0].width, 64);
+  assert.equal(stats.jpeg[0].height, 42);
+  assert.notEqual(stats.jpeg[0].outputPath, path.join("test/img/KkPMmHd3hP-64.jpeg"));
+
+  let defaultRaw = await sharp(defaultStats.jpeg[0].buffer).ensureAlpha().toFormat(sharp.format.raw).toBuffer();
+  let nearestRaw = await sharp(stats.jpeg[0].buffer).ensureAlpha().toFormat(sharp.format.raw).toBuffer();
+
+  assert.ok(pixelmatch(defaultRaw, nearestRaw, null, stats.jpeg[0].width, stats.jpeg[0].height, { threshold: 0.15 }) > 0);
+});
+
+test("sharpResizeOptions should not override Eleventy Image dimensions", async () => {
+  let stats = await eleventyImage("./test/bio-2017.jpg", {
+    widths: [300],
+    formats: ["jpeg"],
+    outputDir: "./test/img/",
+    dryRun: true,
+    useCache: false,
+    sharpResizeOptions: {
+      width: 10,
+      height: 10,
+      kernel: "nearest",
+    },
+  });
+
+  let outputMetadata = await sharp(stats.jpeg[0].buffer).metadata();
+
+  assert.equal(stats.jpeg[0].width, 300);
+  assert.equal(stats.jpeg[0].height, 199);
+  assert.equal(outputMetadata.width, 300);
+  assert.ok(outputMetadata.height > 10);
+});
+
+test("sharpResizeOptions should allow withoutEnlargement option", () => {
+  let image = new Image("./test/bio-2017.jpg", {
+    sharpResizeOptions: {
+      withoutEnlargement: false,
+    },
+  });
+
+  assert.equal(image.getSharpResizeOptions({ width: 300 }, { format: "jpeg" }).withoutEnlargement, false);
+});
+
 test("statsOnly and eleventyImage output comparison", async () => {
   let statsOnly = await eleventyImage("./test/bio-2017.jpg", {
     statsOnly: true,

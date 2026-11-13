@@ -58,7 +58,8 @@ export function imageOnRequestDuringServePlugin($config, options = {}) {
             // Image path on file system must be in working directory
             src = TemplatePath.absolutePath(".", src);
 
-            if(!fs.existsSync(src) || !src.startsWith(TemplatePath.absolutePath("."))) {
+            // `startsWith` would also accept sibling directories (e.g. `../project-other/`), so match whole path segments.
+            if(!fs.existsSync(src) || !TemplatePath.startsWithSubPath(src, TemplatePath.absolutePath("."))) {
               throw new Error(`Invalid path: ${src}`);
             }
           }
